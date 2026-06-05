@@ -10,9 +10,16 @@ export default function LogoutButton() {
 
   const handleLogout = async () => {
     setIsLoading(true)
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      // refresh()로 RSC 캐시를 무효화해야 뒤로가기 시 보호된 페이지가 노출되지 않음
+      router.refresh()
+      router.push('/login')
+    } catch {
+      // signOut 실패 시 버튼이 영구 비활성화되지 않도록 상태 복구
+      setIsLoading(false)
+    }
   }
 
   return (
