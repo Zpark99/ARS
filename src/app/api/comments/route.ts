@@ -64,7 +64,22 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // ③ insert — RLS comments_insert_own 이 user_id = auth.uid() 를 강제
+  // ③ 중복 코멘트 체크 — 같은 앨범에 이미 작성한 코멘트가 있으면 거부
+  const { data: existing } = await supabase
+    .from('comments')
+    .select('id')
+    .eq('album_id', album_id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (existing) {
+    return NextResponse.json(
+      { error: '이미 이 앨범에 코멘트를 작성했습니다' },
+      { status: 409 }
+    )
+  }
+
+  // ④ insert — RLS comments_insert_own 이 user_id = auth.uid() 를 강제
   const { error } = await supabase
     .from('comments')
     .insert({ user_id: user.id, album_id, content: content.trim() })

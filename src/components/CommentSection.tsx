@@ -68,6 +68,10 @@ export default function CommentSection({
     }
   }
 
+  const hasMyComment = currentUserId
+    ? initialComments.some((c) => c.user_id === currentUserId)
+    : false
+
   // 내 코멘트 맨 위 고정 (서버 정렬이 created_at desc이므로 filter만으로 순서 유지)
   const sortedComments = currentUserId
     ? [
@@ -80,8 +84,8 @@ export default function CommentSection({
     <section className="px-4 py-4">
       <h2 className="text-sm font-semibold text-gray-700 mb-3">코멘트</h2>
 
-      {/* 작성 폼 — 로그인 유저만 */}
-      {currentUserId ? (
+      {/* 작성 폼 — 로그인 유저이고 아직 코멘트 없을 때만 */}
+      {currentUserId && !hasMyComment ? (
         <div className="mb-5">
           <textarea
             value={content}
@@ -111,6 +115,10 @@ export default function CommentSection({
             <p className="text-xs text-red-500 mt-1">{submitError}</p>
           )}
         </div>
+      ) : currentUserId && hasMyComment ? (
+        <p className="text-xs text-gray-400 mb-5">
+          코멘트는 앨범당 하나만 작성할 수 있어요. 수정하려면 삭제 후 다시 작성해주세요.
+        </p>
       ) : (
         <p className="text-xs text-gray-400 mb-5">
           <a

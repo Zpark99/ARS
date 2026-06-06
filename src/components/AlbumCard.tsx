@@ -5,9 +5,11 @@ import type { SearchResult } from '@/types/search'
 
 interface AlbumCardProps {
   album: SearchResult
+  avgScore?: number
+  ratingCount?: number
 }
 
-export default function AlbumCard({ album }: AlbumCardProps) {
+export default function AlbumCard({ album, avgScore, ratingCount }: AlbumCardProps) {
   const { mbid, title, artist_name, cover_url } = album
 
   return (
@@ -49,6 +51,14 @@ export default function AlbumCard({ album }: AlbumCardProps) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-gray-900 truncate">{title}</p>
         <p className="text-xs text-gray-500 mt-0.5 truncate">{artist_name}</p>
+        {avgScore !== undefined && (
+          <p className="text-xs text-yellow-500 mt-1">
+            ★ {avgScore.toFixed(1)}
+            {ratingCount !== undefined && (
+              <span className="text-gray-400 ml-1">({ratingCount}명)</span>
+            )}
+          </p>
+        )}
       </div>
     </Link>
   )
