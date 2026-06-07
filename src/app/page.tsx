@@ -4,6 +4,7 @@ import Header from '@/components/Header'
 import PopularAlbumsSection from '@/components/home/PopularAlbumsSection'
 import MonthlyArtistsSection from '@/components/home/MonthlyArtistsSection'
 import RandomAlbumSection from '@/components/home/RandomAlbumSection'
+import FocusOnSection from '@/components/home/FocusOnSection'
 import type { PopularAlbum, MonthlyArtist } from '@/types/album'
 
 export default async function Home() {
@@ -21,6 +22,7 @@ export default async function Home() {
       <Header />
       <main className="flex-1 flex flex-col gap-8 py-6">
         <PopularAlbumsSection albums={(popularAlbums as PopularAlbum[]) ?? []} />
+        <FocusOnSection />
         <MonthlyArtistsSection artists={(monthlyArtists as MonthlyArtist[]) ?? []} />
         <RandomAlbumSection />
       </main>

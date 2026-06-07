@@ -65,12 +65,16 @@ export async function POST(req: NextRequest) {
   }
 
   // ③ 중복 코멘트 체크 — 같은 앨범에 이미 작성한 코멘트가 있으면 거부
-  const { data: existing } = await supabase
+  const { data: existing, error: checkError } = await supabase
     .from('comments')
     .select('id')
     .eq('album_id', album_id)
     .eq('user_id', user.id)
     .maybeSingle()
+
+  if (checkError) {
+    return NextResponse.json({ error: '코멘트 확인에 실패했습니다' }, { status: 500 })
+  }
 
   if (existing) {
     return NextResponse.json(
@@ -80,12 +84,17 @@ export async function POST(req: NextRequest) {
   }
 
   // ④ insert — RLS comments_insert_own 이 user_id = auth.uid() 를 강제
+  // DB에 UNIQUE(user_id, album_id) 제약이 있으면 race condition 시 23505 에러로 방어됨
   const { error } = await supabase
     .from('comments')
     .insert({ user_id: user.id, album_id, content: content.trim() })
 
   if (error) {
-    return NextResponse.json({ error: '코멘트 저장에 실패했습니다' }, { status: 500 })
+    const isDuplicate = error.code === '23505'
+    return NextResponse.json(
+      { error: isDuplicate ? '이미 이 앨범에 코멘트를 작성했습니다' : '코멘트 저장에 실패했습니다' },
+      { status: isDuplicate ? 409 : 500 }
+    )
   }
 
   return NextResponse.json({ ok: true })

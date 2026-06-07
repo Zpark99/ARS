@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import AlbumCard from '@/components/AlbumCard'
 import type { RandomAlbum } from '@/types/album'
 
@@ -45,13 +46,12 @@ export default function RandomAlbumSection() {
           <p className="px-4 py-6 text-sm text-gray-400 text-center">앨범을 불러올 수 없어요.</p>
         )}
       </div>
-      <button
-        onClick={fetchRandom}
-        disabled={loading}
-        className="mt-3 w-full py-2.5 rounded-full border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50"
+      <Link
+        href="/gallery/잔나비"
+        className="mt-3 w-full py-2.5 rounded-full bg-black text-white text-sm text-center block active:bg-gray-800"
       >
-        다른 앨범 보기
-      </button>
+        갤러리 바로가기
+      </Link>
     </section>
   )
 }

@@ -21,7 +21,7 @@ export default function MonthlyArtistsSection({ artists }: Props) {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">{artist.artist_name}</p>
                 <p className="text-xs text-yellow-500 mt-0.5">
-                  ★ {artist.avg_score.toFixed(1)}
+                  ★ {(artist.avg_score ?? 0).toFixed(1)}
                   <span className="text-gray-400 ml-1">({artist.rating_count}회)</span>
                 </p>
               </div>
