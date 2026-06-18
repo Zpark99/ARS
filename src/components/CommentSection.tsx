@@ -82,7 +82,7 @@ export default function CommentSection({
 
   return (
     <section className="px-4 py-4">
-      <h2 className="text-sm font-semibold text-gray-700 mb-3">코멘트</h2>
+      <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">코멘트</h2>
 
       {/* 작성 폼 — 로그인 유저이고 아직 코멘트 없을 때만 */}
       {currentUserId && !hasMyComment ? (
@@ -93,12 +93,12 @@ export default function CommentSection({
             maxLength={MAX_LENGTH}
             placeholder="이 앨범에 대한 생각을 남겨보세요..."
             rows={3}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-black placeholder:text-gray-300"
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-500 placeholder:text-gray-300 dark:placeholder:text-gray-600"
           />
           <div className="flex items-center justify-between mt-1.5">
             <span
               className={`text-xs tabular-nums ${
-                content.length >= MAX_LENGTH ? 'text-red-400' : 'text-gray-300'
+                content.length >= MAX_LENGTH ? 'text-red-400' : 'text-gray-300 dark:text-gray-600'
               }`}
             >
               {content.length}/{MAX_LENGTH}
@@ -116,11 +116,11 @@ export default function CommentSection({
           )}
         </div>
       ) : currentUserId && hasMyComment ? (
-        <p className="text-xs text-gray-400 mb-5">
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-5">
           코멘트는 앨범당 하나만 작성할 수 있어요. 수정하려면 삭제 후 다시 작성해주세요.
         </p>
       ) : (
-        <p className="text-xs text-gray-400 mb-5">
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-5">
           <a
             href="/login"
             className="text-blue-500 underline-offset-2 hover:underline"
@@ -133,7 +133,7 @@ export default function CommentSection({
 
       {/* 코멘트 목록 */}
       {sortedComments.length === 0 ? (
-        <p className="text-sm text-gray-300 text-center py-10">
+        <p className="text-sm text-gray-300 dark:text-gray-600 text-center py-10">
           아직 코멘트가 없어요
         </p>
       ) : (
@@ -145,26 +145,26 @@ export default function CommentSection({
                 key={comment.id}
                 className={
                   isOwn
-                    ? 'bg-gray-50 rounded-xl px-3 py-3'
-                    : 'border-b border-gray-50 pb-4 last:border-b-0 last:pb-0'
+                    ? 'bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-3'
+                    : 'border-b border-gray-50 dark:border-gray-800 pb-4 last:border-b-0 last:pb-0'
                 }
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-gray-700">
+                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                         {isOwn ? '나' : `사용자 ${comment.user_id.slice(0, 8)}`}
                       </span>
                       {isOwn && (
-                        <span className="text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full leading-none">
+                        <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded-full leading-none">
                           내 코멘트
                         </span>
                       )}
-                      <span className="text-xs text-gray-300">
+                      <span className="text-xs text-gray-300 dark:text-gray-600">
                         {formatDate(comment.created_at)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-800 leading-relaxed break-words">
+                    <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed break-words">
                       {comment.content}
                     </p>
                   </div>
@@ -172,7 +172,7 @@ export default function CommentSection({
                     <button
                       onClick={() => handleDelete(comment.id)}
                       disabled={deletingId === comment.id}
-                      className="shrink-0 text-xs text-gray-300 hover:text-red-400 active:scale-95 transition-colors disabled:opacity-50"
+                      className="shrink-0 text-xs text-gray-300 dark:text-gray-600 hover:text-red-400 active:scale-95 transition-colors disabled:opacity-50"
                     >
                       {deletingId === comment.id ? '삭제 중' : '삭제'}
                     </button>

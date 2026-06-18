@@ -2,7 +2,7 @@
 const FEATURED = {
   artistName: '잔나비',
   label: '페포니 뮤직',
-  youtubeId: 'QolMDs0akR8', // 교체 필요: youtube.com/watch?v= 뒤 11자리
+  youtubeId: 'QolMDs0akR8',
   quote: '알록달록 저희랑 재밌게 놀아요.',
 }
 
@@ -10,15 +10,15 @@ export default function FocusOnSection() {
   return (
     <section className="px-4">
       <div className="mb-3">
-        <p className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-0.5">
+        <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-gray-500 uppercase mb-0.5">
           Focus - on
         </p>
-        <h2 className="text-lg font-bold text-gray-900">이달의 뮤지션</h2>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">이달의 뮤지션</h2>
       </div>
 
-      <div className="rounded-2xl overflow-hidden border border-gray-100">
+      <div className="rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800">
         {/* 영상 — 16:9 비율, 최대 너비 제한 */}
-        <div className="relative w-2/5 mx-auto aspect-video bg-gray-100">
+        <div className="relative w-2/5 mx-auto aspect-video bg-gray-100 dark:bg-gray-800">
           <iframe
             src={`https://www.youtube.com/embed/${FEATURED.youtubeId}`}
             title={`${FEATURED.artistName} 영상`}
@@ -30,11 +30,11 @@ export default function FocusOnSection() {
 
         {/* 아티스트 정보 */}
         <div className="px-4 py-4 flex flex-col gap-1.5">
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             소속 — {FEATURED.label}
           </p>
-          <p className="text-base font-bold text-gray-900">{FEATURED.artistName}</p>
-          <p className="text-sm text-gray-600 leading-relaxed">
+          <p className="text-base font-bold text-gray-900 dark:text-gray-100">{FEATURED.artistName}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
             &ldquo;{FEATURED.quote}&rdquo;
           </p>
         </div>

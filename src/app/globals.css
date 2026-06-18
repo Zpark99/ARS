@@ -1,1 +1,42 @@
+/* app/globals.css 에 병합 — 04 디자인 토큰 (다크 단일 모드) */
 @import "tailwindcss";
+
+:root {
+  --bg: #050505;
+  --surface: #100f12;
+  --border: #1f1f22;
+  --text: #ededed;
+  --text-muted: #9a9aa0;
+  --accent: #a3e635;
+  --accent-foreground: #050505;
+}
+
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  /* Pretendard 적용: 폰트 import 후 아래 적용 */
+  font-family: "Pretendard Variable", Pretendard, -apple-system, system-ui,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Pretendard CDN (간단 적용용). 빌드 최적화하려면 next/font + 로컬 폰트 권장 */
+/* @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"); */

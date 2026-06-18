@@ -74,34 +74,34 @@ export default function RatingSection({
   }
 
   return (
-    <section className="px-4 py-4 border-b border-gray-100">
+    <section className="px-4 py-4 border-b border-gray-100 dark:border-gray-800">
       {/* 평균 별점 — 낙관적 업데이트 반영 */}
       <div className="flex items-center gap-2 mb-3">
         <StarRating value={Math.round(localAvg ?? 0)} size="sm" />
-        <span className="text-sm font-semibold text-gray-800">
+        <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
           {localAvg != null ? localAvg.toFixed(1) : '—'}
         </span>
-        <span className="text-xs text-gray-400">({localCount}명)</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500">({localCount}명)</span>
       </div>
 
       {/* 내 별점 — 로그인 유저만 표시 */}
       {isLoggedIn ? (
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 w-14 shrink-0">내 별점</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 w-14 shrink-0">내 별점</span>
           <StarRating
             value={myScore}
             onChange={submitting ? undefined : handleRate}
             size="md"
           />
           {submitting && (
-            <span className="text-xs text-gray-400">저장 중...</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">저장 중...</span>
           )}
           {!submitting && saved && (
             <span className="text-xs text-green-500">저장됨 ✓</span>
           )}
         </div>
       ) : (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-400 dark:text-gray-500">
           <a
             href="/login"
             className="text-blue-500 underline-offset-2 hover:underline"
