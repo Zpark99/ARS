@@ -9,7 +9,7 @@ interface AlbumCoverProps {
 
 export default function AlbumCover({ src, alt }: AlbumCoverProps) {
   return (
-    <div className="relative w-full aspect-square bg-gray-100 overflow-hidden">
+    <div className="relative w-full aspect-square bg-gray-100 dark:bg-gray-800 overflow-hidden">
       {/* 이미지 로드 실패 또는 cover_url 없을 때 보이는 placeholder */}
       <div className="absolute inset-0 flex items-center justify-center">
         <svg
@@ -19,7 +19,7 @@ export default function AlbumCover({ src, alt }: AlbumCoverProps) {
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
-          className="text-gray-300"
+          className="text-gray-300 dark:text-gray-600"
         >
           <circle cx="12" cy="12" r="10" />
           <circle cx="12" cy="12" r="3" />

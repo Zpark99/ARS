@@ -19,7 +19,7 @@ export default async function LoginPage({
   const { error } = await searchParams
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         {/* 로고 영역 */}
         <div className="flex flex-col items-center gap-4 mb-14">
@@ -27,14 +27,14 @@ export default async function LoginPage({
             <span className="text-white text-2xl font-bold tracking-tight">A</span>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">ARS</h1>
-            <p className="text-sm text-gray-400 tracking-wide">Album Review Service</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">ARS</h1>
+            <p className="text-sm text-gray-400 dark:text-gray-500 tracking-wide">Album Review Service</p>
           </div>
         </div>
 
         {/* 설명 텍스트 */}
         <div className="text-center mb-12">
-          <p className="text-gray-600 text-base leading-relaxed">
+          <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
             좋아하는 음악을 기록하고
             <br />
             나만의 리뷰를 남겨보세요
@@ -53,7 +53,7 @@ export default async function LoginPage({
       </main>
 
       <footer className="pb-8 text-center">
-        <p className="text-xs text-gray-300">
+        <p className="text-xs text-gray-300 dark:text-gray-600">
           © 2025 ARS. All rights reserved.
         </p>
       </footer>

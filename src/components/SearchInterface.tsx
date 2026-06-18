@@ -5,7 +5,6 @@ import { useDebounce } from '@/hooks/useDebounce'
 import AlbumCard from '@/components/AlbumCard'
 import type { SearchResult } from '@/types/search'
 
-// /api/search 응답 계약 타입
 interface SearchApiResponse {
   results?: SearchResult[]
   error?: string
@@ -21,11 +20,12 @@ export default function SearchInterface() {
 
   const debouncedQuery = useDebounce(query, 400)
 
+  const trimmedQuery = debouncedQuery.trim()
+  const effectiveStatus = trimmedQuery ? status : 'idle'
+  const effectiveResults = trimmedQuery ? results : []
+
   useEffect(() => {
-    const trimmed = debouncedQuery.trim()
-    if (!trimmed) {
-      setResults([])
-      setStatus('idle')
+    if (!trimmedQuery) {
       return
     }
 
@@ -34,7 +34,7 @@ export default function SearchInterface() {
     async function doSearch() {
       setStatus('loading')
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`)
+        const res = await fetch(`/api/search?q=${encodeURIComponent(trimmedQuery)}`)
         const data = (await res.json()) as SearchApiResponse
         if (cancelled) return
 
@@ -58,49 +58,47 @@ export default function SearchInterface() {
     return () => {
       cancelled = true
     }
-  }, [debouncedQuery])
+  }, [trimmedQuery])
 
   return (
     <div className="flex flex-col flex-1">
-      {/* 검색창 — 헤더(h-14 = 56px) 바로 아래에 sticky */}
-      <div className="sticky top-14 z-10 bg-white px-4 py-3 border-b border-gray-100">
+      <div className="sticky top-14 z-10 bg-white dark:bg-gray-900 px-4 py-3 border-b border-gray-100 dark:border-gray-800">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="원하는 검색어를 입력하세요"
-          className="w-full px-4 py-2.5 rounded-full border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-gray-400 transition-colors bg-white"
+          className="w-full px-4 py-2.5 rounded-full border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors bg-white dark:bg-gray-800"
           autoComplete="off"
         />
       </div>
 
-      {/* 결과 영역 */}
       <main className="flex-1">
-        {status === 'idle' && (
-          <p className="text-center text-sm text-gray-400 mt-16 px-4">
+        {effectiveStatus === 'idle' && (
+          <p className="text-center text-sm text-gray-400 dark:text-gray-500 mt-16 px-4">
             검색어를 입력하면 앨범을 찾아드려요
           </p>
         )}
 
-        {status === 'loading' && (
+        {effectiveStatus === 'loading' && (
           <div className="flex justify-center mt-16">
-            <div className="w-6 h-6 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-gray-200 dark:border-gray-700 border-t-black dark:border-t-white rounded-full animate-spin" />
           </div>
         )}
 
-        {status === 'error' && (
+        {effectiveStatus === 'error' && (
           <p className="text-center text-sm text-red-500 mt-16 px-4">{errorMsg}</p>
         )}
 
-        {status === 'done' && results.length === 0 && (
-          <p className="text-center text-sm text-gray-400 mt-16 px-4">
-            &ldquo;{debouncedQuery.trim()}&rdquo; 검색 결과가 없습니다
+        {effectiveStatus === 'done' && effectiveResults.length === 0 && (
+          <p className="text-center text-sm text-gray-400 dark:text-gray-500 mt-16 px-4">
+            &ldquo;{trimmedQuery}&rdquo; 검색 결과가 없습니다
           </p>
         )}
 
-        {status === 'done' && results.length > 0 && (
-          <ul className="divide-y divide-gray-50">
-            {results.map((album) => (
+        {effectiveStatus === 'done' && effectiveResults.length > 0 && (
+          <ul className="divide-y divide-gray-50 dark:divide-gray-800">
+            {effectiveResults.map((album) => (
               <li key={album.mbid}>
                 <AlbumCard album={album} />
               </li>

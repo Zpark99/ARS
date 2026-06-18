@@ -16,7 +16,7 @@ export interface GalleryPost {
 interface PostCardProps {
   post: GalleryPost
   currentUserId: string | null
-  onUpdate: (id: string, title: string, content: string) => Promise<void>
+  onUpdate: (id: string, title: string, content: string) => Promise<boolean>
   onDelete: (id: string) => Promise<void>
 }
 
@@ -39,28 +39,28 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
   }
 
   const handleUpdate = async (title: string, content: string) => {
-    await onUpdate(post.id, title, content)
-    setIsEditing(false)
+    const ok = await onUpdate(post.id, title, content)
+    if (ok) setIsEditing(false)
   }
 
   return (
-    <div className="border-b border-gray-100">
+    <div className="border-b border-gray-100 dark:border-gray-800">
       {/* 목록 행 */}
       <button
         onClick={() => { setIsOpen((prev) => !prev); setIsEditing(false) }}
-        className="w-full text-left px-4 py-3 flex items-start justify-between gap-2 active:bg-gray-50"
+        className="w-full text-left px-4 py-3 flex items-start justify-between gap-2 active:bg-gray-50 dark:active:bg-gray-800"
       >
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-gray-900 truncate">{post.title}</p>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{post.title}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             {currentUserId === post.user_id ? '나' : `사용자 ${post.user_id.slice(0, 8)}`} · {formatDate(post.created_at)}
             {isModified && (
-              <span className="ml-1.5 text-gray-400">(수정됨)</span>
+              <span className="ml-1.5 text-gray-400 dark:text-gray-500">(수정됨)</span>
             )}
           </p>
         </div>
         <svg
-          className={`shrink-0 mt-0.5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`shrink-0 mt-0.5 text-gray-400 dark:text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
         >
@@ -81,14 +81,14 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }: Po
             />
           ) : (
             <>
-              <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+              <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
                 {post.content}
               </p>
               {isOwner && (
                 <div className="flex gap-3 mt-3 justify-end">
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="text-xs text-gray-500 underline underline-offset-2 active:text-gray-800"
+                    className="text-xs text-gray-500 dark:text-gray-400 underline underline-offset-2 active:text-gray-800 dark:active:text-gray-200"
                   >
                     수정
                   </button>

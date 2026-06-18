@@ -116,7 +116,7 @@ export default async function AlbumPage({
     .order('created_at', { ascending: false })
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <Header />
 
       <main className="max-w-lg mx-auto">
@@ -130,10 +130,10 @@ export default async function AlbumPage({
 
         {/* 앨범 정보 */}
         <div className="px-4 pt-4 pb-3">
-          <h1 className="text-xl font-bold text-gray-900 leading-snug">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-snug">
             {album.title}
           </h1>
-          <p className="text-sm text-gray-500 mt-1">{album.artist_name}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{album.artist_name}</p>
         </div>
 
         {/* 별점 영역 */}

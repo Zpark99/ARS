@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import PostCard, { type GalleryPost } from './PostCard'
 import PostForm from './PostForm'
@@ -19,7 +19,7 @@ export default function GalleryClient({
   const [posts, setPosts] = useState<GalleryPost[]>(initialPosts)
   const [isWriting, setIsWriting] = useState(false)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const handleCreate = async (title: string, content: string) => {
     const { data, error } = await supabase
@@ -32,15 +32,17 @@ export default function GalleryClient({
     setIsWriting(false)
   }
 
-  const handleUpdate = async (id: string, title: string, content: string) => {
+  const handleUpdate = async (id: string, title: string, content: string): Promise<boolean> => {
     const { data, error } = await supabase
       .from('gallery_posts')
       .update({ title, content, updated_at: new Date().toISOString() })
       .eq('id', id)
+      .eq('user_id', currentUserId!)
       .select()
       .single()
-    if (error || !data) return
+    if (error || !data) return false
     setPosts((prev) => prev.map((p) => (p.id === id ? (data as GalleryPost) : p)))
+    return true
   }
 
   const handleDelete = async (id: string) => {
@@ -52,8 +54,8 @@ export default function GalleryClient({
   return (
     <div className="max-w-lg mx-auto">
       {/* 헤더 영역 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-        <h1 className="text-base font-bold text-gray-900">{artistName} 갤러리</h1>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+        <h1 className="text-base font-bold text-gray-900 dark:text-gray-100">{artistName} 갤러리</h1>
         {currentUserId ? (
           <button
             onClick={() => setIsWriting((prev) => !prev)}
@@ -62,13 +64,13 @@ export default function GalleryClient({
             {isWriting ? '취소' : '글쓰기'}
           </button>
         ) : (
-          <span className="text-xs text-gray-400">로그인 후 글쓰기 가능</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">로그인 후 글쓰기 가능</span>
         )}
       </div>
 
       {/* 글쓰기 폼 */}
       {isWriting && (
-        <div className="px-4 py-4 border-b border-gray-200 bg-gray-50">
+        <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
           <PostForm
             onSubmit={handleCreate}
             onCancel={() => setIsWriting(false)}
@@ -79,7 +81,7 @@ export default function GalleryClient({
 
       {/* 게시글 목록 */}
       {posts.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-16">
+        <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-16">
           아직 게시글이 없어요.
         </p>
       ) : (

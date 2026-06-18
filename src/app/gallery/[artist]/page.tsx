@@ -25,7 +25,7 @@ export default async function GalleryPage({
     .order('created_at', { ascending: false })
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <Header />
       <main>
         <GalleryClient

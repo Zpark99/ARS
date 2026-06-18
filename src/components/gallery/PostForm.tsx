@@ -38,12 +38,12 @@ export default function PostForm({
         <input
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value.slice(0, 100))}
+          onChange={(e) => setTitle(e.target.value)}
           placeholder="제목"
           maxLength={100}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-gray-500 placeholder:text-gray-400 dark:placeholder:text-gray-600"
         />
-        <p className="text-right text-xs text-gray-400 mt-0.5">
+        <p className="text-right text-xs text-gray-400 dark:text-gray-500 mt-0.5">
           {title.length}/100
         </p>
       </div>
@@ -51,13 +51,13 @@ export default function PostForm({
       <div>
         <textarea
           value={content}
-          onChange={(e) => setContent(e.target.value.slice(0, 2000))}
+          onChange={(e) => setContent(e.target.value)}
           placeholder="내용"
           maxLength={2000}
           rows={6}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-black resize-none"
+          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-gray-500 resize-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
         />
-        <p className="text-right text-xs text-gray-400 mt-0.5">
+        <p className="text-right text-xs text-gray-400 dark:text-gray-500 mt-0.5">
           {content.length}/2000
         </p>
       </div>
@@ -66,7 +66,7 @@ export default function PostForm({
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-600 active:bg-gray-100"
+          className="px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-700"
         >
           취소
         </button>
