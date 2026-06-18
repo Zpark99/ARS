@@ -33,14 +33,6 @@ export interface MonthlyArtist {
   sample_cover: string | null
 }
 
-// albums 테이블 랜덤 1행
-export interface RandomAlbum {
-  mbid: string
-  title: string
-  artist_name: string
-  cover_url: string | null
-}
-
 // GET /api/ratings?album_id= 응답 구조
 export interface RatingSummary {
   avg: number | null   // 평균 별점 (평가 없으면 null)
