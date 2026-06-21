@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import Header from '@/components/Header'
 import AlbumCover from '@/components/AlbumCover'
 import RatingSection from '@/components/RatingSection'
 import CommentSection from '@/components/CommentSection'
@@ -117,8 +116,6 @@ export default async function AlbumPage({
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
-      <Header />
-
       <main className="max-w-lg mx-auto">
         {/* 앨범 커버 — 모바일: 전체 너비, md 이상: 중앙 정렬 + 최대 너비 제한 */}
         <div className="md:max-w-xs md:mx-auto md:mt-6">

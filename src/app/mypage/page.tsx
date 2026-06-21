@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import Header from '@/components/Header'
 import MyRatingsSection, { type MyRating } from '@/components/mypage/MyRatingsSection'
 import MyCommentsSection, { type MyComment } from '@/components/mypage/MyCommentsSection'
 import MyGalleryPostsSection, { type MyGalleryPost } from '@/components/mypage/MyGalleryPostsSection'
@@ -42,7 +41,6 @@ export default async function MyPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Header />
       <main className="max-w-lg mx-auto pb-12">
 
         {/* 내 정보 */}

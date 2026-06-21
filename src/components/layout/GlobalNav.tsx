@@ -6,6 +6,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import LogoutButton from "@/components/auth/LogoutButton";
 
 type NavItem = { href: string; label: string };
 
@@ -16,12 +17,15 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 type GlobalNavProps = {
-  // 로그인 사용자 정보 (없으면 미로그인). 실제로는 서버에서 세션 받아 전달
-  user?: { id: string; avatarUrl?: string | null } | null;
+  // 로그인 사용자 정보 (없으면 미로그인). 서버 세션에서 받아 전달됨
+  user?: { id: string; name: string; avatarUrl?: string | null } | null;
 };
 
 export function GlobalNav({ user = null }: GlobalNavProps) {
   const pathname = usePathname();
+
+  // 로그인 화면은 구글 로그인 버튼에 집중시키기 위해 전역 Navbar를 노출하지 않음
+  if (pathname === "/login") return null;
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
@@ -68,21 +72,29 @@ export function GlobalNav({ user = null }: GlobalNavProps) {
           </Link>
 
           {user ? (
-            <Link
-              href="/me"
-              aria-label="내 페이지"
-              className="relative h-8 w-8 overflow-hidden rounded-full bg-surface ring-1 ring-border"
-            >
-              {user.avatarUrl ? (
-                <Image
-                  src={user.avatarUrl}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="32px"
-                />
-              ) : null}
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/mypage"
+                className="flex items-center gap-2"
+                aria-label="내 페이지"
+              >
+                <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-surface ring-1 ring-border">
+                  {user.avatarUrl ? (
+                    <Image
+                      src={user.avatarUrl}
+                      alt=""
+                      fill
+                      className="object-cover"
+                      sizes="32px"
+                    />
+                  ) : null}
+                </span>
+                <span className="max-w-[72px] truncate text-[13px] text-text md:max-w-[120px]">
+                  {user.name}님 반갑습니다
+                </span>
+              </Link>
+              <LogoutButton className="rounded-sm px-2 py-1 text-[13px] text-text-muted transition-colors hover:text-text disabled:opacity-50" />
+            </div>
           ) : (
             <Link
               href="/login"

@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import Header from '@/components/Header'
 import SearchInterface from '@/components/SearchInterface'
 
 export default async function SearchPage() {
@@ -13,7 +12,6 @@ export default async function SearchPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
-      <Header />
       <SearchInterface />
     </div>
   )
