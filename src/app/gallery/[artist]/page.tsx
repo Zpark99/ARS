@@ -1,4 +1,3 @@
-import Header from '@/components/Header'
 import GalleryClient from '@/components/gallery/GalleryClient'
 import { createClient } from '@/lib/supabase/server'
 import type { GalleryPost } from '@/components/gallery/PostCard'
@@ -26,7 +25,6 @@ export default async function GalleryPage({
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
-      <Header />
       <main>
         <GalleryClient
           artistName={artistName}

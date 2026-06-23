@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isValidRatingScore } from '@/lib/validation/rating'
 import type { RatingSummary } from '@/types/album'
 
 // GET /api/ratings?album_id=<uuid>
@@ -65,12 +66,7 @@ export async function POST(req: NextRequest) {
   if (typeof album_id !== 'string' || !album_id.trim()) {
     return NextResponse.json({ error: 'album_id가 필요합니다' }, { status: 400 })
   }
-  if (
-    typeof score !== 'number' ||
-    !Number.isInteger(score) ||
-    score < 1 ||
-    score > 5
-  ) {
+  if (!isValidRatingScore(score)) {
     return NextResponse.json(
       { error: 'score는 1~5 정수여야 합니다' },
       { status: 400 }
