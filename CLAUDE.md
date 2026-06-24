@@ -17,8 +17,7 @@
 - 컴포넌트: `src/components/`
 
 ## 보안
-
-- `.env` 파일은 절대 커밋하지 않는다 (`.gitignore`에서 `.env*` 전체 무시 중)
+ b않는다 (`.gitignore`에서 `.env*` 전체 무시 중)
 
 ## 커밋
 

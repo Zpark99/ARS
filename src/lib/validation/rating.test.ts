@@ -2,8 +2,9 @@ import { describe, expect, test } from "vitest";
 import { isValidRatingScore } from "./rating";
 
 describe("isValidRatingScore", () => {
-  test("1~5 사이 정수는 통과", () => {
-    expect(isValidRatingScore(1)).toBe(true);
+  test("0.5~5 사이의 0.5 단위 값은 통과", () => {
+    expect(isValidRatingScore(4.5)).toBe(true);
+    expect(isValidRatingScore(0.5)).toBe(true);
     expect(isValidRatingScore(5)).toBe(true);
   });
 
@@ -15,7 +16,7 @@ describe("isValidRatingScore", () => {
     expect(isValidRatingScore(5.5)).toBe(false);
   });
 
-  test("정수가 아니면 거부 (이 앱은 0.5점 단위를 지원하지 않음)", () => {
+  test("0.5 단위가 아니면 거부", () => {
     expect(isValidRatingScore(3.7)).toBe(false);
   });
 
