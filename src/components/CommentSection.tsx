@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { MAX_COMMENT_LENGTH } from '@/lib/validation/comment'
 import type { CommentRow } from '@/types/album'
-
-const MAX_LENGTH = 500
 
 interface CommentSectionProps {
   albumId: string
@@ -90,7 +89,7 @@ export default function CommentSection({
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            maxLength={MAX_LENGTH}
+            maxLength={MAX_COMMENT_LENGTH}
             placeholder="이 앨범에 대한 생각을 남겨보세요..."
             rows={3}
             className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-500 placeholder:text-gray-300 dark:placeholder:text-gray-600"
@@ -98,10 +97,10 @@ export default function CommentSection({
           <div className="flex items-center justify-between mt-1.5">
             <span
               className={`text-xs tabular-nums ${
-                content.length >= MAX_LENGTH ? 'text-red-400' : 'text-gray-300 dark:text-gray-600'
+                content.length >= MAX_COMMENT_LENGTH ? 'text-red-400' : 'text-gray-300 dark:text-gray-600'
               }`}
             >
-              {content.length}/{MAX_LENGTH}
+              {content.length}/{MAX_COMMENT_LENGTH}
             </span>
             <button
               onClick={handleSubmit}

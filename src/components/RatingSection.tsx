@@ -77,7 +77,7 @@ export default function RatingSection({
     <section className="px-4 py-4 border-b border-gray-100 dark:border-gray-800">
       {/* 평균 별점 — 낙관적 업데이트 반영 */}
       <div className="flex items-center gap-2 mb-3">
-        <StarRating value={Math.round(localAvg ?? 0)} size="sm" />
+        <StarRating value={localAvg ?? 0} size="sm" />
         <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
           {localAvg != null ? localAvg.toFixed(1) : '—'}
         </span>
@@ -93,6 +93,11 @@ export default function RatingSection({
             onChange={submitting ? undefined : handleRate}
             size="md"
           />
+          {myScore > 0 && (
+            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+              {myScore.toFixed(1)}
+            </span>
+          )}
           {submitting && (
             <span className="text-xs text-gray-400 dark:text-gray-500">저장 중...</span>
           )}

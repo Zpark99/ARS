@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isValidComment, MAX_COMMENT_LENGTH } from '@/lib/validation/comment'
 import type { CommentRow } from '@/types/album'
-
-const MAX_CONTENT_LENGTH = 500
 
 // GET /api/comments?album_id=<uuid>
 // 최신순 코멘트 목록 반환
@@ -53,13 +52,10 @@ export async function POST(req: NextRequest) {
   if (typeof album_id !== 'string' || !album_id.trim()) {
     return NextResponse.json({ error: 'album_id가 필요합니다' }, { status: 400 })
   }
-  if (typeof content !== 'string' || !content.trim()) {
-    return NextResponse.json({ error: '코멘트 내용을 입력해주세요' }, { status: 400 })
-  }
   // DB의 CHECK (char_length(content) <= 500) 전에 서버에서도 검증 — 클라이언트 우회 방어
-  if (content.length > MAX_CONTENT_LENGTH) {
+  if (!isValidComment(content)) {
     return NextResponse.json(
-      { error: `코멘트는 ${MAX_CONTENT_LENGTH}자 이하여야 합니다` },
+      { error: `코멘트는 1자 이상 ${MAX_COMMENT_LENGTH}자 이하여야 합니다` },
       { status: 400 }
     )
   }

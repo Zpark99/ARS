@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 }
 
 // POST /api/ratings
-// body: { album_id: string, score: number (1~5 정수) }
+// body: { album_id: string, score: number (0.5~5, 0.5 단위) }
 // 로그인 유저만 허용. 기존 별점이 있으면 업데이트(upsert).
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
   }
   if (!isValidRatingScore(score)) {
     return NextResponse.json(
-      { error: 'score는 1~5 정수여야 합니다' },
+      { error: 'score는 0.5~5 사이의 0.5 단위 값이어야 합니다' },
       { status: 400 }
     )
   }
