@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import AlbumCover from '@/components/AlbumCover'
 import RatingSection from '@/components/RatingSection'
 import CommentSection from '@/components/CommentSection'
+import AlbumLikeButton from '@/components/AlbumLikeButton'
 import { createClient } from '@/lib/supabase/server'
 import type { AlbumRow, CommentRow } from '@/types/album'
 
@@ -91,12 +92,16 @@ export default async function AlbumPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  // 4. 별점 집계 — SELECT 한 번으로 평균/개수/내 별점을 모두 계산
-  //    별도 aggregate 쿼리 없이 앱 레벨에서 계산 (데이터 규모 상 적합)
-  const { data: ratings } = await supabase
-    .from('ratings')
-    .select('score, user_id')
-    .eq('album_id', album.id)
+  // 4. 별점, 코멘트, 앨범 좋아요 수 병렬 조회
+  const [ratingsResult, commentsResult, albumLikeCountResult] = await Promise.all([
+    supabase.from('ratings').select('score, user_id').eq('album_id', album.id),
+    supabase.from('comments').select('*').eq('album_id', album.id).order('created_at', { ascending: false }),
+    supabase.from('likes').select('id', { count: 'exact', head: true }).eq('target_type', 'album').eq('target_id', album.id),
+  ])
+
+  const ratings = ratingsResult.data
+  const comments = commentsResult.data
+  const commentIds = (comments ?? []).map((c) => c.id)
 
   const ratingCount = ratings?.length ?? 0
   const ratingAvg =
@@ -107,12 +112,28 @@ export default async function AlbumPage({
     ? (ratings?.find((r) => r.user_id === user.id)?.score ?? null)
     : null
 
-  // 5. 코멘트 목록 (최신순)
-  const { data: comments } = await supabase
-    .from('comments')
-    .select('*')
-    .eq('album_id', album.id)
-    .order('created_at', { ascending: false })
+  // 5. 유저별 좋아요 여부 + 코멘트 좋아요 목록 병렬 조회
+  const [myAlbumLikeData, commentLikesData] = await Promise.all([
+    user
+      ? supabase.from('likes').select('id').eq('user_id', user.id).eq('target_type', 'album').eq('target_id', album.id).maybeSingle().then((r) => r.data)
+      : Promise.resolve(null),
+    commentIds.length > 0
+      ? supabase.from('likes').select('target_id, user_id').eq('target_type', 'comment').in('target_id', commentIds).then((r) => r.data ?? [])
+      : Promise.resolve([] as Array<{ target_id: string; user_id: string }>),
+  ])
+
+  const albumLiked = !!myAlbumLikeData
+  const albumLikeCount = albumLikeCountResult.count ?? 0
+
+  // 코멘트 ID별 좋아요 수 + 내 좋아요 여부 맵
+  const commentLikes: Record<string, { count: number; liked: boolean }> = {}
+  for (const id of commentIds) {
+    const entries = commentLikesData.filter((l) => l.target_id === id)
+    commentLikes[id] = {
+      count: entries.length,
+      liked: user ? entries.some((l) => l.user_id === user.id) : false,
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -131,6 +152,14 @@ export default async function AlbumPage({
             {album.title}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{album.artist_name}</p>
+          <div className="mt-3">
+            <AlbumLikeButton
+              albumId={album.id}
+              initialLiked={albumLiked}
+              initialCount={albumLikeCount}
+              isLoggedIn={!!user}
+            />
+          </div>
         </div>
 
         {/* 별점 영역 */}
@@ -147,6 +176,7 @@ export default async function AlbumPage({
           albumId={album.id}
           initialComments={(comments ?? []) as CommentRow[]}
           currentUserId={user?.id ?? null}
+          commentLikes={commentLikes}
         />
       </main>
     </div>

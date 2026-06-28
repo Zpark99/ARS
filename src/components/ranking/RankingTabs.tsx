@@ -1,56 +1,70 @@
-// components/ranking/RankingTabs.tsx
-// 정렬 탭(평점/좋아요/코멘트수) + 기간 필터(월간/전체).
-// P1은 "평점순 + 전체"만 동작. 나머지는 disabled로 표시만 하고 전환 로직은 없음.
+'use client'
+
+import { useRouter } from 'next/navigation'
 
 const SORT_TABS = [
-  { key: "rating", label: "평점", disabled: false },
-  { key: "likes", label: "좋아요", disabled: true },
-  { key: "comments", label: "코멘트수", disabled: true },
-] as const;
+  { key: 'rating', label: '평점' },
+  { key: 'likes', label: '좋아요' },
+  { key: 'comments', label: '코멘트수', disabled: true },
+] as const
 
 const PERIOD_TABS = [
-  { key: "monthly", label: "월간", disabled: true },
-  { key: "all", label: "전체", disabled: false },
-] as const;
+  { key: 'monthly', label: '월간', disabled: true },
+  { key: 'all', label: '전체' },
+] as const
 
-export function RankingTabs() {
+interface RankingTabsProps {
+  activeSort: string
+}
+
+export function RankingTabs({ activeSort }: RankingTabsProps) {
+  const router = useRouter()
+
   return (
     <div className="mb-4 flex flex-col gap-2">
       <div className="flex gap-2">
-        {SORT_TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            disabled={tab.disabled}
-            aria-current={tab.disabled ? undefined : "true"}
-            className={
-              tab.disabled
-                ? "cursor-not-allowed rounded-sm px-3 py-1.5 text-[13px] text-text-muted/40"
-                : "rounded-sm bg-accent px-3 py-1.5 text-[13px] font-medium text-accent-foreground"
-            }
-          >
-            {tab.label}
-          </button>
-        ))}
+        {SORT_TABS.map((tab) => {
+          const isDisabled = 'disabled' in tab && tab.disabled
+          const isActive = !isDisabled && tab.key === activeSort
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              disabled={isDisabled}
+              onClick={isDisabled ? undefined : () => router.push(`/ranking?sort=${tab.key}`)}
+              className={
+                isDisabled
+                  ? 'cursor-not-allowed rounded-sm px-3 py-1.5 text-[13px] text-text-muted/40'
+                  : isActive
+                  ? 'rounded-sm bg-accent px-3 py-1.5 text-[13px] font-medium text-accent-foreground'
+                  : 'rounded-sm px-3 py-1.5 text-[13px] text-text-muted transition-colors hover:text-text'
+              }
+            >
+              {tab.label}
+            </button>
+          )
+        })}
       </div>
 
       <div className="flex gap-2">
-        {PERIOD_TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            disabled={tab.disabled}
-            aria-current={tab.disabled ? undefined : "true"}
-            className={
-              tab.disabled
-                ? "cursor-not-allowed rounded-sm border border-border px-3 py-1 text-[12px] text-text-muted/40"
-                : "rounded-sm border border-accent px-3 py-1 text-[12px] text-accent"
-            }
-          >
-            {tab.label}
-          </button>
-        ))}
+        {PERIOD_TABS.map((tab) => {
+          const isDisabled = 'disabled' in tab && tab.disabled
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              disabled={isDisabled}
+              className={
+                isDisabled
+                  ? 'cursor-not-allowed rounded-sm border border-border px-3 py-1 text-[12px] text-text-muted/40'
+                  : 'rounded-sm border border-accent px-3 py-1 text-[12px] text-accent'
+              }
+            >
+              {tab.label}
+            </button>
+          )
+        })}
       </div>
     </div>
-  );
+  )
 }

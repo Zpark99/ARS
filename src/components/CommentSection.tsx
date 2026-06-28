@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation'
 import { MAX_COMMENT_LENGTH } from '@/lib/validation/comment'
 import type { CommentRow } from '@/types/album'
 
+type CommentLikeInfo = { count: number; liked: boolean }
+
 interface CommentSectionProps {
   albumId: string
   initialComments: CommentRow[]
   currentUserId: string | null
+  commentLikes: Record<string, CommentLikeInfo>
 }
 
 function formatDate(iso: string): string {
@@ -23,12 +26,15 @@ export default function CommentSection({
   albumId,
   initialComments,
   currentUserId,
+  commentLikes,
 }: CommentSectionProps) {
   const router = useRouter()
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [likesState, setLikesState] = useState<Record<string, CommentLikeInfo>>(commentLikes)
+  const [likingId, setLikingId] = useState<string | null>(null)
 
   const handleSubmit = async () => {
     if (!content.trim() || submitting) return
@@ -64,6 +70,39 @@ export default function CommentSection({
       // 삭제 실패 시 router.refresh()로 서버 원본 상태 복구
     } finally {
       setDeletingId(null)
+    }
+  }
+
+  const handleCommentLike = async (commentId: string) => {
+    if (likingId) return
+    if (!currentUserId) {
+      router.push('/login')
+      return
+    }
+
+    const prev = likesState[commentId] ?? { count: 0, liked: false }
+    const next = { count: prev.liked ? prev.count - 1 : prev.count + 1, liked: !prev.liked }
+    setLikesState((s) => ({ ...s, [commentId]: next }))
+    setLikingId(commentId)
+
+    try {
+      const res = await fetch('/api/likes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetType: 'comment', targetId: commentId }),
+      })
+      if (res.status === 401) {
+        setLikesState((s) => ({ ...s, [commentId]: prev }))
+        router.push('/login')
+        return
+      }
+      if (!res.ok) throw new Error()
+      const json: { liked: boolean; count: number } = await res.json()
+      setLikesState((s) => ({ ...s, [commentId]: { count: json.count, liked: json.liked } }))
+    } catch {
+      setLikesState((s) => ({ ...s, [commentId]: prev }))
+    } finally {
+      setLikingId(null)
     }
   }
 
@@ -166,6 +205,34 @@ export default function CommentSection({
                     <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed break-words">
                       {comment.content}
                     </p>
+                    <div className="mt-2">
+                      <button
+                        onClick={() => handleCommentLike(comment.id)}
+                        disabled={likingId === comment.id}
+                        aria-label={(likesState[comment.id]?.liked) ? '좋아요 취소' : '좋아요'}
+                        className={`flex items-center gap-1 text-xs transition-colors disabled:opacity-50 ${
+                          likesState[comment.id]?.liked
+                            ? 'text-accent'
+                            : 'text-gray-300 hover:text-gray-500 dark:text-gray-600 dark:hover:text-gray-400'
+                        }`}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill={likesState[comment.id]?.liked ? 'currentColor' : 'none'}
+                          stroke="currentColor"
+                          strokeWidth={2}
+                          className="h-3.5 w-3.5"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                          />
+                        </svg>
+                        <span>{likesState[comment.id]?.count ?? 0}</span>
+                      </button>
+                    </div>
                   </div>
                   {isOwn && (
                     <button
