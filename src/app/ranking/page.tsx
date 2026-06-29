@@ -1,6 +1,5 @@
 // app/ranking/page.tsx
-// 화면정의서 랭킹. 평점순 전체 랭킹만 P1 범위 (좋아요/코멘트수/월간은 비활성 탭으로 노출).
-// 새 테이블/뷰 없이 albums + ratings를 조인해 앱 레벨에서 평균/개수 집계.
+// 평점순(기본) + 좋아요순 탭 지원. 나머지 탭(코멘트수/월간)은 비활성.
 
 import { createClient } from "@/lib/supabase/server";
 import { RankingTabs } from "@/components/ranking/RankingTabs";
@@ -16,38 +15,79 @@ type AlbumWithRatings = {
   ratings: { score: number }[];
 };
 
-export default async function RankingPage() {
+type AlbumBase = {
+  id: string;
+  mbid: string;
+  title: string;
+  artist_name: string;
+  cover_url: string | null;
+};
+
+export default async function RankingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string }>;
+}) {
+  const { sort = "rating" } = await searchParams;
   const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("albums")
-    .select("id, mbid, title, artist_name, cover_url, ratings(score)");
+  let ranking: PopularAlbum[];
 
-  const ranking: PopularAlbum[] = ((data ?? []) as unknown as AlbumWithRatings[])
-    .map((album) => {
-      const ratingCount = album.ratings.length;
-      const avgScore =
-        ratingCount > 0
-          ? album.ratings.reduce((sum, r) => sum + r.score, 0) / ratingCount
-          : 0;
-      return {
+  if (sort === "likes") {
+    const [albumsResult, likesResult] = await Promise.all([
+      supabase.from("albums").select("id, mbid, title, artist_name, cover_url"),
+      supabase.from("likes").select("target_id").eq("target_type", "album"),
+    ]);
+
+    const likeCountMap: Record<string, number> = {};
+    for (const like of likesResult.data ?? []) {
+      likeCountMap[like.target_id] = (likeCountMap[like.target_id] ?? 0) + 1;
+    }
+
+    ranking = ((albumsResult.data ?? []) as AlbumBase[])
+      .map((album) => ({
         id: album.id,
         mbid: album.mbid,
         title: album.title,
         artist_name: album.artist_name,
         cover_url: album.cover_url,
-        rating_count: ratingCount,
-        avg_score: avgScore,
-      };
-    })
-    .filter((album) => album.rating_count > 0)
-    .sort((a, b) => b.avg_score - a.avg_score || b.rating_count - a.rating_count);
+        rating_count: 0,
+        avg_score: 0,
+        like_count: likeCountMap[album.id] ?? 0,
+      }))
+      .filter((a) => a.like_count > 0)
+      .sort((a, b) => b.like_count - a.like_count);
+  } else {
+    const { data } = await supabase
+      .from("albums")
+      .select("id, mbid, title, artist_name, cover_url, ratings(score)");
+
+    ranking = ((data ?? []) as unknown as AlbumWithRatings[])
+      .map((album) => {
+        const ratingCount = album.ratings.length;
+        const avgScore =
+          ratingCount > 0
+            ? album.ratings.reduce((sum, r) => sum + r.score, 0) / ratingCount
+            : 0;
+        return {
+          id: album.id,
+          mbid: album.mbid,
+          title: album.title,
+          artist_name: album.artist_name,
+          cover_url: album.cover_url,
+          rating_count: ratingCount,
+          avg_score: avgScore,
+        };
+      })
+      .filter((album) => album.rating_count > 0)
+      .sort((a, b) => b.avg_score - a.avg_score || b.rating_count - a.rating_count);
+  }
 
   return (
     <main className="mx-auto max-w-screen-sm px-4 py-6">
       <h1 className="mb-4 text-[22px] font-bold text-text">랭킹</h1>
 
-      <RankingTabs />
+      <RankingTabs activeSort={sort} />
 
       {ranking.length === 0 ? (
         <p className="py-12 text-center text-[14px] text-text-muted">
