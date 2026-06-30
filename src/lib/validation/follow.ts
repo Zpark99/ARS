@@ -1,0 +1,1 @@
+export { isValidUUID } from './like'
