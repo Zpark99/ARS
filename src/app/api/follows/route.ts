@@ -12,14 +12,23 @@ export async function POST(req: NextRequest) {
   // ① 인증 검사
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: '로그인이 필요합니다' }, { status: 401 })
+  if (authError || !user) {
+    const status = authError ? 500 : 401
+    return NextResponse.json(
+      { error: authError ? '인증 확인에 실패했습니다' : '로그인이 필요합니다' },
+      { status }
+    )
   }
 
   let body: { targetUserId?: unknown }
   try {
-    body = await req.json()
+    const raw = await req.json()
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      return NextResponse.json({ error: '잘못된 요청 형식입니다' }, { status: 400 })
+    }
+    body = raw
   } catch {
     return NextResponse.json({ error: '잘못된 요청 형식입니다' }, { status: 400 })
   }
