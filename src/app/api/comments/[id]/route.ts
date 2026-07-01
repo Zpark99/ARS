@@ -35,5 +35,8 @@ export async function DELETE(
     return NextResponse.json({ error: '코멘트 삭제에 실패했습니다' }, { status: 500 })
   }
 
+  // ③ 해당 코멘트 좋아요 정리 — likes.target_id에 FK 없어 DB가 자동 정리 안 함
+  await supabase.from('likes').delete().eq('target_type', 'comment').eq('target_id', id)
+
   return NextResponse.json({ ok: true })
 }

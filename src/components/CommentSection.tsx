@@ -34,7 +34,7 @@ export default function CommentSection({
   const [submitError, setSubmitError] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [likesState, setLikesState] = useState<Record<string, CommentLikeInfo>>(commentLikes)
-  const [likingId, setLikingId] = useState<string | null>(null)
+  const [likingSet, setLikingSet] = useState<Set<string>>(new Set())
 
   const handleSubmit = async () => {
     if (!content.trim() || submitting) return
@@ -74,7 +74,7 @@ export default function CommentSection({
   }
 
   const handleCommentLike = async (commentId: string) => {
-    if (likingId) return
+    if (likingSet.has(commentId)) return
     if (!currentUserId) {
       router.push('/login')
       return
@@ -83,7 +83,7 @@ export default function CommentSection({
     const prev = likesState[commentId] ?? { count: 0, liked: false }
     const next = { count: prev.liked ? prev.count - 1 : prev.count + 1, liked: !prev.liked }
     setLikesState((s) => ({ ...s, [commentId]: next }))
-    setLikingId(commentId)
+    setLikingSet((prev) => new Set(prev).add(commentId))
 
     try {
       const res = await fetch('/api/likes', {
@@ -102,7 +102,7 @@ export default function CommentSection({
     } catch {
       setLikesState((s) => ({ ...s, [commentId]: prev }))
     } finally {
-      setLikingId(null)
+      setLikingSet((prev) => { const n = new Set(prev); n.delete(commentId); return n })
     }
   }
 
@@ -208,7 +208,7 @@ export default function CommentSection({
                     <div className="mt-2">
                       <button
                         onClick={() => handleCommentLike(comment.id)}
-                        disabled={likingId === comment.id}
+                        disabled={likingSet.has(comment.id)}
                         aria-label={(likesState[comment.id]?.liked) ? '좋아요 취소' : '좋아요'}
                         className={`flex items-center gap-1 text-xs transition-colors disabled:opacity-50 ${
                           likesState[comment.id]?.liked
