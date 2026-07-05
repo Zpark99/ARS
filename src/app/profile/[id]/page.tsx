@@ -65,7 +65,7 @@ export default async function ProfilePage({
   const [ratingsResult, likedIdsResult] = await Promise.all([
     supabase
       .from('ratings')
-      .select('score, created_at, albums(id, mbid, title, artist_name, cover_url)')
+      .select('score, created_at, albums!inner(id, mbid, title, artist_name, cover_url)')
       .eq('user_id', id)
       .order('created_at', { ascending: false }),
     supabase
