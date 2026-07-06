@@ -4,6 +4,7 @@ import { useState } from 'react'
 import AlbumCard from '@/components/AlbumCard'
 
 interface AlbumInfo {
+  id: string
   mbid: string
   title: string
   artist_name: string

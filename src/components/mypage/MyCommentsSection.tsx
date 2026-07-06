@@ -5,6 +5,7 @@ import Link from 'next/link'
 import AlbumCover from '@/components/AlbumCover'
 
 interface AlbumInfo {
+  id: string
   mbid: string
   title: string
   artist_name: string
