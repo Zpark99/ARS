@@ -4,8 +4,8 @@ CREATE TABLE public.board_posts (
   id          UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id     UUID         NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   board_type  TEXT         NOT NULL CHECK (board_type IN ('qa', 'updates')),
-  title       TEXT         NOT NULL CHECK (char_length(title) <= 100),
-  content     TEXT         NOT NULL CHECK (char_length(content) <= 2000),
+  title       TEXT         NOT NULL CHECK (char_length(title) BETWEEN 1 AND 100),
+  content     TEXT         NOT NULL CHECK (char_length(content) BETWEEN 1 AND 2000),
   created_at  TIMESTAMPTZ  DEFAULT now(),
   updated_at  TIMESTAMPTZ  DEFAULT now()
 );
