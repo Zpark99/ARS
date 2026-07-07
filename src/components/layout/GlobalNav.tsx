@@ -10,10 +10,11 @@ import LogoutButton from "@/components/auth/LogoutButton";
 
 type NavItem = { href: string; label: string };
 
-// P1 노출 메뉴 (게시판/갤러리 등 P2는 이후 추가)
 const NAV_ITEMS: NavItem[] = [
   { href: "/archive", label: "아카이브" },
   { href: "/ranking", label: "랭킹" },
+  { href: "/qa", label: "QA" },
+  { href: "/updates", label: "업데이트" },
 ];
 
 type GlobalNavProps = {
