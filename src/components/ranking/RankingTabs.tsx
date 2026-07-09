@@ -3,9 +3,9 @@
 import { useRouter } from 'next/navigation'
 
 const SORT_TABS = [
-  { key: 'rating', label: '평점' },
-  { key: 'likes', label: '좋아요' },
-  { key: 'comments', label: '코멘트수', disabled: true },
+  { key: 'rating', label: '평점', disabled: false },
+  { key: 'likes', label: '좋아요', disabled: false },
+  { key: 'comments', label: '코멘트수', disabled: false },
 ] as const
 
 const PERIOD_TABS = [

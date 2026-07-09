@@ -1,5 +1,5 @@
 // app/ranking/page.tsx
-// 평점순(기본) + 좋아요순 탭 지원. 나머지 탭(코멘트수/월간)은 비활성.
+// 평점순(기본) + 좋아요순 + 코멘트순 탭 지원. 나머지 탭(월간)은 비활성.
 
 import { createClient } from "@/lib/supabase/server";
 import { RankingTabs } from "@/components/ranking/RankingTabs";
@@ -57,6 +57,30 @@ export default async function RankingPage({
       }))
       .filter((a) => a.like_count > 0)
       .sort((a, b) => b.like_count - a.like_count);
+  } else if (sort === "comments") {
+    const [albumsResult, commentsResult] = await Promise.all([
+      supabase.from("albums").select("id, mbid, title, artist_name, cover_url"),
+      supabase.from("comments").select("album_id"),
+    ]);
+
+    const commentCountMap: Record<string, number> = {};
+    for (const comment of commentsResult.data ?? []) {
+      commentCountMap[comment.album_id] = (commentCountMap[comment.album_id] ?? 0) + 1;
+    }
+
+    ranking = ((albumsResult.data ?? []) as AlbumBase[])
+      .map((album) => ({
+        id: album.id,
+        mbid: album.mbid,
+        title: album.title,
+        artist_name: album.artist_name,
+        cover_url: album.cover_url,
+        rating_count: 0,
+        avg_score: 0,
+        comment_count: commentCountMap[album.id] ?? 0,
+      }))
+      .filter((a) => a.comment_count > 0)
+      .sort((a, b) => b.comment_count - a.comment_count);
   } else {
     const { data } = await supabase
       .from("albums")
