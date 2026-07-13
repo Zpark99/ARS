@@ -34,8 +34,9 @@ export default async function MyPage() {
 
     supabase
       .from('comments')
-      .select('id, content, created_at, albums!inner(id, mbid, title, artist_name, cover_url)')
+      .select('id, content, created_at, target_id')
       .eq('user_id', user.id)
+      .eq('target_type', 'album')
       .order('created_at', { ascending: false }),
 
     supabase
@@ -70,6 +71,23 @@ export default async function MyPage() {
     .map((lid) => likedMap.get(lid))
     .filter((a): a is AlbumRow => !!a)
 
+  // comments.target_id에 FK 없어 직접 조인 (다형성 전환으로 albums!inner 불가)
+  const commentAlbumIds = [...new Set((comments ?? []).map((c) => c.target_id))]
+  const commentAlbumsRaw =
+    commentAlbumIds.length > 0
+      ? ((await supabase
+          .from('albums')
+          .select('id, mbid, title, artist_name, cover_url')
+          .in('id', commentAlbumIds)).data ?? [])
+      : []
+  const commentAlbumMap = new Map(commentAlbumsRaw.map((a) => [a.id, a as AlbumRow]))
+  const myComments: MyComment[] = (comments ?? []).map((c) => ({
+    id: c.id,
+    content: c.content,
+    created_at: c.created_at,
+    albums: commentAlbumMap.get(c.target_id) ?? null,
+  }))
+
   const displayName =
     (profile?.nickname && profile.nickname.trim()) ||
     user.user_metadata?.full_name ||
@@ -78,7 +96,6 @@ export default async function MyPage() {
     '사용자'
 
   const myRatings = (ratings ?? []) as unknown as MyRating[]
-  const myComments = (comments ?? []) as unknown as MyComment[]
   const myPosts = (posts ?? []) as MyGalleryPost[]
 
   return (

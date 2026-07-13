@@ -1,15 +1,18 @@
 export interface AlbumRow {
-  id: string           // uuid (PK) — ratings/comments의 FK 대상
+  id: string           // uuid (PK) — ratings의 FK 대상, comments는 target_id로 다형 참조
   mbid: string         // MusicBrainz Release ID (UNIQUE)
   title: string
   artist_name: string
   cover_url: string | null
 }
 
+export type CommentTargetType = 'album' | 'post'
+
 export interface CommentRow {
   id: string
-  user_id: string      // auth.users.id 참조
-  album_id: string     // albums.id 참조
+  user_id: string          // auth.users.id 참조
+  target_type: CommentTargetType
+  target_id: string        // target_type='album'이면 albums.id, 'post'면 board_posts.id
   content: string
   created_at: string
 }

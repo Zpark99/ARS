@@ -95,7 +95,7 @@ export default async function AlbumPage({
   // 4. 별점, 코멘트, 앨범 좋아요 수 병렬 조회
   const [ratingsResult, commentsResult, albumLikeCountResult] = await Promise.all([
     supabase.from('ratings').select('score, user_id').eq('album_id', album.id),
-    supabase.from('comments').select('*').eq('album_id', album.id).order('created_at', { ascending: false }),
+    supabase.from('comments').select('*').eq('target_type', 'album').eq('target_id', album.id).order('created_at', { ascending: false }),
     supabase.from('likes').select('id', { count: 'exact', head: true }).eq('target_type', 'album').eq('target_id', album.id),
   ])
 

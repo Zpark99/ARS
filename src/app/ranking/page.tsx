@@ -60,12 +60,12 @@ export default async function RankingPage({
   } else if (sort === "comments") {
     const [albumsResult, commentsResult] = await Promise.all([
       supabase.from("albums").select("id, mbid, title, artist_name, cover_url"),
-      supabase.from("comments").select("album_id"),
+      supabase.from("comments").select("target_id").eq("target_type", "album"),
     ]);
 
     const commentCountMap: Record<string, number> = {};
     for (const comment of commentsResult.data ?? []) {
-      commentCountMap[comment.album_id] = (commentCountMap[comment.album_id] ?? 0) + 1;
+      commentCountMap[comment.target_id] = (commentCountMap[comment.target_id] ?? 0) + 1;
     }
 
     ranking = ((albumsResult.data ?? []) as AlbumBase[])
