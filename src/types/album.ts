@@ -23,7 +23,8 @@ export interface PopularAlbum {
   cover_url: string | null
   rating_count: number
   avg_score: number
-  like_count?: number  // 좋아요순 정렬 시 사용
+  like_count?: number     // 좋아요순 정렬 시 사용
+  comment_count?: number  // 코멘트순 정렬 시 사용
 }
 
 // monthly_artists view
