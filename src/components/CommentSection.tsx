@@ -44,7 +44,7 @@ export default function CommentSection({
       const res = await fetch('/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ album_id: albumId, content }),
+        body: JSON.stringify({ targetType: 'album', targetId: albumId, content }),
       })
       if (!res.ok) {
         const json = await res.json()

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { isValidComment, MAX_COMMENT_LENGTH } from "./comment";
+import { isValidComment, isValidCommentTargetType, MAX_COMMENT_LENGTH } from "./comment";
 
 describe("isValidComment", () => {
   test("정상적인 내용은 통과", () => {
@@ -26,5 +26,25 @@ describe("isValidComment", () => {
     expect(isValidComment(null)).toBe(false);
     expect(isValidComment(undefined)).toBe(false);
     expect(isValidComment(123)).toBe(false);
+  });
+});
+
+describe("isValidCommentTargetType", () => {
+  test("'album'은 통과", () => {
+    expect(isValidCommentTargetType("album")).toBe(true);
+  });
+
+  test("'post'는 통과", () => {
+    expect(isValidCommentTargetType("post")).toBe(true);
+  });
+
+  test("'comment'는 거부 (comments의 target이 아님)", () => {
+    expect(isValidCommentTargetType("comment")).toBe(false);
+  });
+
+  test("빈 문자열, null, undefined는 거부", () => {
+    expect(isValidCommentTargetType("")).toBe(false);
+    expect(isValidCommentTargetType(null)).toBe(false);
+    expect(isValidCommentTargetType(undefined)).toBe(false);
   });
 });
