@@ -52,6 +52,9 @@ export default function BoardClient({
   }
 
   const handleDelete = async (id: string) => {
+    // 관련 comments/likes 정리는 DB 트리거(cleanup_board_post_related)가 처리 —
+    // 클라이언트에서 직접 지우면 RLS(comments_delete_own/likes_delete_own) 때문에
+    // 삭제 요청자 소유가 아닌 행은 지워지지 않아 고아 데이터가 남는다.
     const { error } = await supabase.from('board_posts').delete().eq('id', id)
     if (error) return
     setPosts((prev) => prev.filter((p) => p.id !== id))

@@ -10,8 +10,12 @@ describe("isValidTargetType", () => {
     expect(isValidTargetType("comment")).toBe(true);
   });
 
+  test("'post'는 통과", () => {
+    expect(isValidTargetType("post")).toBe(true);
+  });
+
   test("허용되지 않은 값은 거부", () => {
-    expect(isValidTargetType("post")).toBe(false);
+    expect(isValidTargetType("board")).toBe(false);
   });
 
   test("빈 문자열은 거부", () => {

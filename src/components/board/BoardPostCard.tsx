@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import BoardPostForm from './BoardPostForm'
+import BoardCommentSection from './BoardCommentSection'
+import BoardPostLikeButton from './BoardPostLikeButton'
 import type { BoardType } from '@/lib/validation/board'
 
 export interface BoardPost {
@@ -85,22 +87,26 @@ export default function BoardPostCard({ post, currentUserId, onUpdate, onDelete 
               <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
                 {post.content}
               </p>
-              {isOwner && (
-                <div className="flex gap-3 mt-3 justify-end">
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="text-xs text-gray-500 dark:text-gray-400 underline underline-offset-2 active:text-gray-800 dark:active:text-gray-200"
-                  >
-                    수정
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="text-xs text-red-500 underline underline-offset-2 active:text-red-700"
-                  >
-                    삭제
-                  </button>
-                </div>
-              )}
+              <div className="flex items-center justify-between mt-3">
+                <BoardPostLikeButton postId={post.id} currentUserId={currentUserId} />
+                {isOwner && (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-xs text-gray-500 dark:text-gray-400 underline underline-offset-2 active:text-gray-800 dark:active:text-gray-200"
+                    >
+                      수정
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      className="text-xs text-red-500 underline underline-offset-2 active:text-red-700"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                )}
+              </div>
+              <BoardCommentSection postId={post.id} currentUserId={currentUserId} />
             </>
           )}
         </div>
