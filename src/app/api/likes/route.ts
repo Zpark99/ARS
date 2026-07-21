@@ -5,10 +5,11 @@ import { isValidTargetType, isValidUUID, type LikeTargetType } from '@/lib/valid
 const TARGET_TABLE: Record<LikeTargetType, string> = {
   album: 'albums',
   comment: 'comments',
+  post: 'board_posts',
 }
 
 // POST /api/likes
-// body: { targetType: 'album' | 'comment', targetId: string }
+// body: { targetType: 'album' | 'comment' | 'post', targetId: string }
 // 좋아요 토글 — 이미 누른 상태면 취소(DELETE), 아니면 등록(INSERT)
 // 로그인 유저만 허용
 export async function POST(req: NextRequest) {
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
   // ② 입력 검증
   if (!isValidTargetType(targetType)) {
     return NextResponse.json(
-      { error: "targetType은 'album' 또는 'comment'여야 합니다" },
+      { error: "targetType은 'album', 'comment', 'post' 중 하나여야 합니다" },
       { status: 400 }
     )
   }
