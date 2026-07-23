@@ -99,16 +99,34 @@ export async function POST(req: NextRequest) {
     liked = true
   }
 
-  // ⑤ 현재 좋아요 수 COUNT — like_count 컬럼 없이 즉시 집계
-  const { count, error: countError } = await supabase
-    .from('likes')
-    .select('id', { count: 'exact', head: true })
-    .eq('target_type', targetType)
-    .eq('target_id', targetId)
+  // ⑤ 현재 좋아요 수 조회
+  // album/post는 likes 트리거가 원자적으로 유지하는 like_count 캐시 컬럼을 그대로 읽는다
+  // (매번 likes 테이블 COUNT(*)를 재계산하지 않음 → #36 COUNT race 대응).
+  // comment는 랭킹 집계 대상이 아니라 캐시 컬럼이 없어 기존 방식(COUNT) 유지.
+  let count: number
+  if (targetType === 'comment') {
+    const { count: liveCount, error: countError } = await supabase
+      .from('likes')
+      .select('id', { count: 'exact', head: true })
+      .eq('target_type', targetType)
+      .eq('target_id', targetId)
 
-  if (countError) {
-    return NextResponse.json({ error: '좋아요 수 조회에 실패했습니다' }, { status: 500 })
+    if (countError) {
+      return NextResponse.json({ error: '좋아요 수 조회에 실패했습니다' }, { status: 500 })
+    }
+    count = liveCount ?? 0
+  } else {
+    const { data: countRow, error: countError } = await supabase
+      .from(TARGET_TABLE[targetType])
+      .select('like_count')
+      .eq('id', targetId)
+      .single()
+
+    if (countError) {
+      return NextResponse.json({ error: '좋아요 수 조회에 실패했습니다' }, { status: 500 })
+    }
+    count = countRow.like_count
   }
 
-  return NextResponse.json({ liked, count: count ?? 0 })
+  return NextResponse.json({ liked, count })
 }
