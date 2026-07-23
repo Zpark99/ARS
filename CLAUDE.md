@@ -31,7 +31,9 @@ gh CLI로 이슈를 먼저 만든다.
 - 라벨: bug / regular development / urgent development 중 해당하는 것
 - 마일스톤: 해당 마일스톤에 연결 (예: 소셜 레이어 - P2 (게시판), 안정화·배포 - P3)
   마일스톤 이름이 Phase를 포함하므로 별도 Phase 필드는 없음
-- Start date: 개발 착수일 / Target date: 마일스톤 기한 / End date: PR 생성일
+- Start date: 이슈 생성 시점엔 잠정값(오늘 날짜)으로 채워두고, 실제 착수일이 확정되면
+  5단계에서 재확인·갱신한다 / Target date: 마일스톤 기한 / End date: 이슈 생성 시점엔
+  비워두고 5단계(PR 생성)에서 채운다
 - assignee: @me
 - 생성 후 이슈 번호를 사용자에게 알린다.
 
@@ -62,6 +64,10 @@ gh CLI로 이슈를 먼저 만든다.
 ### 5단계 — PR 생성 (Claude가 직접 실행)
 - gh pr create --base main --title "..." --body "... Closes #이슈번호"
 - PR 생성까지 완료한 뒤 사용자에게 PR 링크와 함께 알린다.
+- PR 생성 직후 연결된 이슈의 프로젝트 필드를 실제 값으로 갱신한다 (상세: 이슈 필드 규칙 참고)
+  - Start date → 그 작업의 실제 첫 커밋 날짜로 수정
+  - End date → PR 생성일로 설정
+  - Target date는 마일스톤 기한과 다르면 바로잡는다
 - 여기서 멈춘다. ⛔ 머지는 하지 않는다.
 
 ### 6단계 — 머지 (⛔ 무조건 사용자 수동. Claude 자동 머지 절대 금지)
@@ -103,6 +109,24 @@ PowerShell 큰따옴표 개행 방식(`git commit -m "...여러 줄..."`)도 본
 - 마일스톤: 주제별 (소셜 / 게시판 / 랭킹·탐색 / 시스템 등, 실제 저장소 마일스톤 기준)
   마일스톤 이름에 Phase가 포함되므로 별도 Phase 필드는 없음
 - project : ARS
-- Start date: 실제 개발 착수일
-- Target date: 해당 이슈가 속한 마일스톤의 기한으로 고정
-- End date: PR 생성일 (머지일이 아님 — PR 생성 시점 기준)
+- Start date: 실제 개발 착수일 (= 그 작업의 코드를 처음 만든 날짜. 브랜치 생성일이나
+  이슈 생성일이 아니라 첫 커밋 날짜 기준. 이슈 생성 시점엔 잠정값을 넣고,
+  실제 착수일이 확정되면 갱신한다)
+- Target date: 해당 이슈가 속한 마일스톤의 기한으로 고정 (마일스톤이 바뀌면 함께 갱신)
+- End date: PR 생성일로 고정 (머지일이 아님 — PR 생성 시점 기준. 이슈 생성 시점엔
+  비워두고 5단계에서 채운다)
+
+이슈 생성 시점의 값은 잠정치일 수 있으므로, 5단계(PR 생성) 직후 Start date/End date가
+실제 값과 맞는지 반드시 재확인·갱신한다. Target date는 마일스톤 기한과 항상 일치해야 하며
+불일치 시 그 자리에서 바로잡는다.
+
+### gh CLI로 프로젝트 필드 갱신하는 법
+```
+gh project item-list 6 --owner Zpark99 --format json   # ITEM_ID 조회 (이슈 번호로 필터)
+gh project item-edit --id <ITEM_ID> --project-id <PROJECT_ID> --field-id <FIELD_ID> --date "YYYY-MM-DD"
+```
+ARS 프로젝트(project 6)의 고정 ID (재조회 불필요):
+- project-id: `PVT_kwHOCiWYls4BZemI`
+- Start date field-id: `PVTF_lAHOCiWYls4BZemIzhUc95U`
+- Target date field-id: `PVTF_lAHOCiWYls4BZemIzhUc95Y`
+- End Date field-id: `PVTF_lAHOCiWYls4BZemIzhUuYDY`
