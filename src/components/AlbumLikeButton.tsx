@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLikeToggle } from '@/hooks/useLikeToggle'
 
 interface AlbumLikeButtonProps {
   albumId: string
@@ -17,45 +17,19 @@ export default function AlbumLikeButton({
   isLoggedIn,
 }: AlbumLikeButtonProps) {
   const router = useRouter()
-  const [liked, setLiked] = useState(initialLiked)
-  const [count, setCount] = useState(initialCount)
-  const [loading, setLoading] = useState(false)
+  const { liked, count, loading, toggle } = useLikeToggle({
+    targetType: 'album',
+    targetId: albumId,
+    initialLiked,
+    initialCount,
+  })
 
-  const handleClick = async () => {
-    if (loading) return
+  const handleClick = () => {
     if (!isLoggedIn) {
       router.push('/login')
       return
     }
-
-    const prevLiked = liked
-    const prevCount = count
-    setLiked(!liked)
-    setCount(liked ? count - 1 : count + 1)
-    setLoading(true)
-
-    try {
-      const res = await fetch('/api/likes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetType: 'album', targetId: albumId }),
-      })
-      if (res.status === 401) {
-        setLiked(prevLiked)
-        setCount(prevCount)
-        router.push('/login')
-        return
-      }
-      if (!res.ok) throw new Error()
-      const json: { liked: boolean; count: number } = await res.json()
-      setLiked(json.liked)
-      setCount(json.count)
-    } catch {
-      setLiked(prevLiked)
-      setCount(prevCount)
-    } finally {
-      setLoading(false)
-    }
+    toggle()
   }
 
   return (

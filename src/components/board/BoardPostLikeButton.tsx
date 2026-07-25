@@ -1,77 +1,42 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useLikeToggle } from '@/hooks/useLikeToggle'
 
 interface BoardPostLikeButtonProps {
   postId: string
   currentUserId: string | null
 }
 
+async function loadInitialLikeState(postId: string, currentUserId: string | null) {
+  const supabase = createClient()
+
+  const [countRes, ownRes] = await Promise.all([
+    supabase.from('likes').select('id', { count: 'exact', head: true }).eq('target_type', 'post').eq('target_id', postId),
+    currentUserId
+      ? supabase.from('likes').select('id').eq('user_id', currentUserId).eq('target_type', 'post').eq('target_id', postId).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+
+  return { count: countRes.count ?? 0, liked: !!ownRes.data }
+}
+
 export default function BoardPostLikeButton({ postId, currentUserId }: BoardPostLikeButtonProps) {
   const router = useRouter()
-  const [liked, setLiked] = useState(false)
-  const [count, setCount] = useState(0)
-  const [ready, setReady] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const { liked, count, loading, ready, toggle } = useLikeToggle({
+    targetType: 'post',
+    targetId: postId,
+    loadInitial: () => loadInitialLikeState(postId, currentUserId),
+  })
 
-  useEffect(() => {
-    let cancelled = false
-    const supabase = createClient()
-
-    Promise.all([
-      supabase.from('likes').select('id', { count: 'exact', head: true }).eq('target_type', 'post').eq('target_id', postId),
-      currentUserId
-        ? supabase.from('likes').select('id').eq('user_id', currentUserId).eq('target_type', 'post').eq('target_id', postId).maybeSingle()
-        : Promise.resolve({ data: null }),
-    ]).then(([countRes, ownRes]) => {
-      if (cancelled) return
-      setCount(countRes.count ?? 0)
-      setLiked(!!ownRes.data)
-      setReady(true)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [postId, currentUserId])
-
-  const handleClick = async () => {
-    if (loading || !ready) return
+  const handleClick = () => {
+    if (!ready) return
     if (!currentUserId) {
       router.push('/login')
       return
     }
-
-    const prevLiked = liked
-    const prevCount = count
-    setLiked(!liked)
-    setCount(liked ? count - 1 : count + 1)
-    setLoading(true)
-
-    try {
-      const res = await fetch('/api/likes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetType: 'post', targetId: postId }),
-      })
-      if (res.status === 401) {
-        setLiked(prevLiked)
-        setCount(prevCount)
-        router.push('/login')
-        return
-      }
-      if (!res.ok) throw new Error()
-      const json: { liked: boolean; count: number } = await res.json()
-      setLiked(json.liked)
-      setCount(json.count)
-    } catch {
-      setLiked(prevLiked)
-      setCount(prevCount)
-    } finally {
-      setLoading(false)
-    }
+    toggle()
   }
 
   return (

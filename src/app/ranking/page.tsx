@@ -34,29 +34,25 @@ export default async function RankingPage({
   let ranking: PopularAlbum[];
 
   if (sort === "likes") {
-    const [albumsResult, likesResult] = await Promise.all([
-      supabase.from("albums").select("id, mbid, title, artist_name, cover_url"),
-      supabase.from("likes").select("target_id").eq("target_type", "album"),
-    ]);
+    // 트리거가 유지하는 albums.like_count 캐시 컬럼을 직접 정렬 (#36).
+    // 예전엔 likes 원본 행을 전부 select해서 JS로 집계했는데, PostgREST 기본
+    // 1000행 제한에 걸리면 상위 항목이 누락될 수 있었음.
+    const { data } = await supabase
+      .from("albums")
+      .select("id, mbid, title, artist_name, cover_url, like_count")
+      .gt("like_count", 0)
+      .order("like_count", { ascending: false });
 
-    const likeCountMap: Record<string, number> = {};
-    for (const like of likesResult.data ?? []) {
-      likeCountMap[like.target_id] = (likeCountMap[like.target_id] ?? 0) + 1;
-    }
-
-    ranking = ((albumsResult.data ?? []) as AlbumBase[])
-      .map((album) => ({
-        id: album.id,
-        mbid: album.mbid,
-        title: album.title,
-        artist_name: album.artist_name,
-        cover_url: album.cover_url,
-        rating_count: 0,
-        avg_score: 0,
-        like_count: likeCountMap[album.id] ?? 0,
-      }))
-      .filter((a) => a.like_count > 0)
-      .sort((a, b) => b.like_count - a.like_count);
+    ranking = ((data ?? []) as (AlbumBase & { like_count: number })[]).map((album) => ({
+      id: album.id,
+      mbid: album.mbid,
+      title: album.title,
+      artist_name: album.artist_name,
+      cover_url: album.cover_url,
+      rating_count: 0,
+      avg_score: 0,
+      like_count: album.like_count,
+    }));
   } else if (sort === "comments") {
     const [albumsResult, commentsResult] = await Promise.all([
       supabase.from("albums").select("id, mbid, title, artist_name, cover_url"),

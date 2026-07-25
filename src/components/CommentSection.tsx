@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { MAX_COMMENT_LENGTH } from '@/lib/validation/comment'
+import { toggleLike, UnauthorizedLikeError } from '@/lib/likes/toggleLike'
 import type { CommentRow } from '@/types/album'
 
 type CommentLikeInfo = { count: number; liked: boolean }
@@ -86,21 +87,13 @@ export default function CommentSection({
     setLikingSet((prev) => new Set(prev).add(commentId))
 
     try {
-      const res = await fetch('/api/likes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetType: 'comment', targetId: commentId }),
-      })
-      if (res.status === 401) {
-        setLikesState((s) => ({ ...s, [commentId]: prev }))
-        router.push('/login')
-        return
-      }
-      if (!res.ok) throw new Error()
-      const json: { liked: boolean; count: number } = await res.json()
-      setLikesState((s) => ({ ...s, [commentId]: { count: json.count, liked: json.liked } }))
-    } catch {
+      const result = await toggleLike('comment', commentId)
+      setLikesState((s) => ({ ...s, [commentId]: result }))
+    } catch (err) {
       setLikesState((s) => ({ ...s, [commentId]: prev }))
+      if (err instanceof UnauthorizedLikeError) {
+        router.push('/login')
+      }
     } finally {
       setLikingSet((prev) => { const n = new Set(prev); n.delete(commentId); return n })
     }
