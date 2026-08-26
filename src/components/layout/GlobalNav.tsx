@@ -15,6 +15,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/ranking", label: "랭킹" },
   { href: "/qa", label: "QA" },
   { href: "/updates", label: "업데이트" },
+  { href: "/promo", label: "홍보" },
 ];
 
 type GlobalNavProps = {

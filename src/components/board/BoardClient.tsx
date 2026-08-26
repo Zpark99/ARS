@@ -4,14 +4,21 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import BoardPostCard, { type BoardPost } from './BoardPostCard'
-import BoardPostForm from './BoardPostForm'
-import { isValidBoardTitle, isValidBoardContent, type BoardType } from '@/lib/validation/board'
+import BoardPostForm, { type PromoSelection } from './BoardPostForm'
+import {
+  isValidBoardTitle,
+  isValidBoardContent,
+  requiresArtistAlbum,
+  type BoardType,
+} from '@/lib/validation/board'
 
 interface BoardClientProps {
   boardType: BoardType
   boardLabel: string
   initialPosts: BoardPost[]
   currentUserId: string | null
+  // promo 게시판일 때만 전달 — 글쓰기 폼의 artist 선택 목록
+  artists?: { id: string; name: string }[]
 }
 
 export default function BoardClient({
@@ -19,17 +26,27 @@ export default function BoardClient({
   boardLabel,
   initialPosts,
   currentUserId,
+  artists,
 }: BoardClientProps) {
   const [posts, setPosts] = useState<BoardPost[]>(initialPosts)
   const [isWriting, setIsWriting] = useState(false)
 
   const supabase = useMemo(() => createClient(), [])
 
-  const handleCreate = async (title: string, content: string) => {
+  const handleCreate = async (title: string, content: string, promo?: PromoSelection) => {
     if (!currentUserId || !isValidBoardTitle(title) || !isValidBoardContent(content)) return
+    if (requiresArtistAlbum(boardType) && (!promo?.artistId || !promo?.albumId)) return
     const { data, error } = await supabase
       .from('board_posts')
-      .insert({ board_type: boardType, user_id: currentUserId, title, content })
+      .insert({
+        board_type: boardType,
+        user_id: currentUserId,
+        title,
+        content,
+        ...(requiresArtistAlbum(boardType)
+          ? { artist_id: promo!.artistId, album_id: promo!.albumId }
+          : {}),
+      })
       .select()
       .single()
     if (error || !data) return
@@ -89,6 +106,7 @@ export default function BoardClient({
             onSubmit={handleCreate}
             onCancel={() => setIsWriting(false)}
             submitLabel="작성"
+            artists={artists}
           />
         </div>
       )}

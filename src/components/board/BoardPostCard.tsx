@@ -14,6 +14,8 @@ export interface BoardPost {
   content: string
   created_at: string
   updated_at: string
+  artist?: { name: string } | null
+  album?: { title: string } | null
 }
 
 interface BoardPostCardProps {
@@ -55,6 +57,13 @@ export default function BoardPostCard({ post, currentUserId, onUpdate, onDelete 
       >
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{post.title}</p>
+          {(post.artist || post.album) && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+              {post.artist?.name}
+              {post.artist && post.album ? ' · ' : ''}
+              {post.album?.title}
+            </p>
+          )}
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             {currentUserId === post.user_id ? '나' : `사용자 ${post.user_id.slice(0, 8)}`} · {formatDate(post.created_at)}
             {isModified && (
