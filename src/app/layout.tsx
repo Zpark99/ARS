@@ -2,9 +2,17 @@
 // GlobalNav를 모든 화면 상단에 전역 적용. 서버 세션에서 로그인 사용자 정보를 가져와 전달.
 
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import { GlobalNav } from "@/components/layout/GlobalNav";
 import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
+
+const pretendard = localFont({
+  src: "../../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
+  variable: "--font-pretendard",
+  weight: "45 920",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "ARS",
@@ -34,7 +42,7 @@ export default async function RootLayout({
     : null;
 
   return (
-    <html lang="ko">
+    <html lang="ko" className={pretendard.variable}>
       <body className="min-h-dvh bg-bg text-text">
         <GlobalNav user={user} />
         {children}
