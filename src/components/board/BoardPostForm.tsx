@@ -10,8 +10,8 @@ import {
 } from '@/lib/validation/board'
 
 export interface PromoSelection {
-  artistId: string
-  albumId: string
+  artistId?: string
+  albumId?: string
 }
 
 interface BoardPostFormProps {
@@ -20,7 +20,7 @@ interface BoardPostFormProps {
   onSubmit: (title: string, content: string, promo?: PromoSelection) => Promise<void>
   onCancel: () => void
   submitLabel?: string
-  // promo 게시판일 때만 전달 — 있으면 artist/album 선택이 필수로 렌더링됨
+  // promo 게시판일 때만 전달 — 있으면 팀/앨범 검색 콤보박스가 (선택으로) 노출됨
   artists?: { id: string; name: string }[]
 }
 
@@ -35,19 +35,21 @@ export default function BoardPostForm({
   const [title, setTitle] = useState(initialTitle)
   const [content, setContent] = useState(initialContent)
   const [loading, setLoading] = useState(false)
-  const [artistId, setArtistId] = useState('')
-  const [albumId, setAlbumId] = useState('')
+  const [artistInput, setArtistInput] = useState('')
+  const [albumInput, setAlbumInput] = useState('')
   const [albums, setAlbums] = useState<{ id: string; title: string }[]>([])
 
+  // 타이핑한 텍스트가 목록의 이름과 정확히 일치할 때만 실제 선택으로 간주 (안 골라도 됨)
+  const selectedArtist = artists?.find((a) => a.name === artistInput)
+  const selectedAlbum = albums.find((al) => al.title === albumInput)
+
   useEffect(() => {
-    if (!artists || !artistId) return
-    const artistName = artists.find((a) => a.id === artistId)?.name
-    if (!artistName) return
+    if (!selectedArtist) return
     let cancelled = false
     createClient()
       .from('albums')
       .select('id, title')
-      .eq('artist_name', artistName)
+      .eq('artist_name', selectedArtist.name)
       .order('title')
       .then(({ data }) => {
         if (!cancelled) setAlbums(data ?? [])
@@ -55,19 +57,22 @@ export default function BoardPostForm({
     return () => {
       cancelled = true
     }
-  }, [artistId, artists])
+  }, [selectedArtist])
 
-  const isValid =
-    isValidBoardTitle(title) &&
-    isValidBoardContent(content) &&
-    (!artists || (artistId !== '' && albumId !== ''))
+  const isValid = isValidBoardTitle(title) && isValidBoardContent(content)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!isValid) return
     setLoading(true)
     try {
-      await onSubmit(title.trim(), content.trim(), artists ? { artistId, albumId } : undefined)
+      await onSubmit(
+        title.trim(),
+        content.trim(),
+        artists
+          ? { artistId: selectedArtist?.id, albumId: selectedAlbum?.id }
+          : undefined
+      )
     } finally {
       setLoading(false)
     }
@@ -77,31 +82,36 @@ export default function BoardPostForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       {artists && (
         <div className="flex gap-2">
-          <select
-            value={artistId}
-            onChange={(e) => {
-              setArtistId(e.target.value)
-              setAlbumId('')
-              setAlbums([])
-            }}
-            className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-gray-500"
-          >
-            <option value="">팀 선택</option>
+          <input
+            type="text"
+            list="promo-artist-options"
+            value={artistInput}
+            onChange={(e) => setArtistInput(e.target.value)}
+            placeholder="팀 검색 (선택)"
+            className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-gray-500 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+          />
+          <datalist id="promo-artist-options">
             {artists.map((a) => (
-              <option key={a.id} value={a.id}>{a.name}</option>
+              <option key={a.id} value={a.name} />
             ))}
-          </select>
-          <select
-            value={albumId}
-            onChange={(e) => setAlbumId(e.target.value)}
-            disabled={!artistId}
-            className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-gray-500 disabled:opacity-40"
-          >
-            <option value="">앨범 선택</option>
-            {albums.map((al) => (
-              <option key={al.id} value={al.id}>{al.title}</option>
-            ))}
-          </select>
+          </datalist>
+          {selectedArtist && (
+            <>
+              <input
+                type="text"
+                list="promo-album-options"
+                value={albumInput}
+                onChange={(e) => setAlbumInput(e.target.value)}
+                placeholder="앨범 검색 (선택)"
+                className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-gray-500 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+              />
+              <datalist id="promo-album-options">
+                {albums.map((al) => (
+                  <option key={al.id} value={al.title} />
+                ))}
+              </datalist>
+            </>
+          )}
         </div>
       )}
       <div>

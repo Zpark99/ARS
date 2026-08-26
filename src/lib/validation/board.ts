@@ -11,11 +11,6 @@ export function isValidBoardType(value: unknown): value is BoardType {
   return value === "qa" || value === "updates" || value === "promo";
 }
 
-// promo 글은 artist_id/album_id 필수 (board_posts_promo_requires_artist_album DB 제약과 동일)
-export function requiresArtistAlbum(boardType: BoardType): boolean {
-  return boardType === "promo";
-}
-
 export function isValidBoardTitle(value: unknown): value is string {
   return (
     typeof value === "string" &&
