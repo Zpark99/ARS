@@ -8,7 +8,6 @@ import BoardPostForm, { type PromoSelection } from './BoardPostForm'
 import {
   isValidBoardTitle,
   isValidBoardContent,
-  requiresArtistAlbum,
   type BoardType,
 } from '@/lib/validation/board'
 
@@ -35,7 +34,6 @@ export default function BoardClient({
 
   const handleCreate = async (title: string, content: string, promo?: PromoSelection) => {
     if (!currentUserId || !isValidBoardTitle(title) || !isValidBoardContent(content)) return
-    if (requiresArtistAlbum(boardType) && (!promo?.artistId || !promo?.albumId)) return
     const { data, error } = await supabase
       .from('board_posts')
       .insert({
@@ -43,9 +41,8 @@ export default function BoardClient({
         user_id: currentUserId,
         title,
         content,
-        ...(requiresArtistAlbum(boardType)
-          ? { artist_id: promo!.artistId, album_id: promo!.albumId }
-          : {}),
+        artist_id: promo?.artistId ?? null,
+        album_id: promo?.albumId ?? null,
       })
       .select()
       .single()
