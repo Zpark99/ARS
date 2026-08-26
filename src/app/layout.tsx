@@ -1,9 +1,11 @@
 // app/layout.tsx
-// GlobalNav를 모든 화면 상단에 전역 적용. 서버 세션에서 로그인 사용자 정보를 가져와 전달.
+// GlobalHeader를 모든 화면 상단에 전역 적용. 서버 세션에서 로그인 사용자 정보를 가져와 전달.
 
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { GlobalNav } from "@/components/layout/GlobalNav";
+import { GlobalHeader } from "@/components/layout/GlobalHeader";
+import { GlobalFooter } from "@/components/layout/GlobalFooter";
+import { TabBar } from "@/components/layout/TabBar";
 import { createClient } from "@/lib/supabase/server";
 import "./globals.css";
 
@@ -43,9 +45,11 @@ export default async function RootLayout({
 
   return (
     <html lang="ko" className={pretendard.variable}>
-      <body className="min-h-dvh bg-bg text-text">
-        <GlobalNav user={user} />
-        {children}
+      <body className="flex min-h-dvh flex-col bg-bg pb-14 text-text md:pb-0">
+        <GlobalHeader user={user} />
+        <main className="flex-1">{children}</main>
+        <GlobalFooter />
+        <TabBar user={user} />
       </body>
     </html>
   );
