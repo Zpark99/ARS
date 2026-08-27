@@ -6,8 +6,9 @@ import Link from "next/link";
 
 export function GlobalFooter() {
   return (
-    <footer className="border-t border-border bg-bg px-6 py-4">
-      <div className="mx-auto flex max-w-screen-xl flex-col gap-2 md:flex-row md:items-center md:justify-between">
+    <footer className="border-t border-border bg-bg px-4 py-4 md:px-6">
+      {/* 페이지 콘텐츠 컨테이너(max-w-[1364px])와 폭을 맞춰 좌우 끝이 일치하도록 */}
+      <div className="mx-auto flex max-w-[1364px] flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <Link href="/" className="text-caption font-semibold text-accent">
             ARS

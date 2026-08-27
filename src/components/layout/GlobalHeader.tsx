@@ -40,8 +40,8 @@ export function GlobalHeader({ user = null }: GlobalHeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-bg">
-      {/* 웹: 로고 + 중앙 내비 + 우측 액션 */}
-      <div className="mx-auto hidden h-14 max-w-screen-xl items-center justify-between gap-6 px-6 md:flex">
+      {/* 웹: 로고 + 중앙 내비 + 우측 액션. 페이지 콘텐츠 컨테이너(max-w-[1364px])와 폭을 맞춰 좌우 끝이 일치하도록 */}
+      <div className="mx-auto hidden h-14 max-w-[1364px] items-center justify-between gap-6 px-6 md:flex">
         <Link
           href="/"
           className="shrink-0 text-subtitle font-semibold text-accent"
@@ -55,7 +55,7 @@ export function GlobalHeader({ user = null }: GlobalHeaderProps) {
               <Link
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
-                className={`text-body transition-colors ${
+                className={`text-[18px] transition-colors ${
                   isActive(item.href)
                     ? "text-text"
                     : "text-text-muted hover:text-text"
@@ -109,8 +109,8 @@ export function GlobalHeader({ user = null }: GlobalHeaderProps) {
         </div>
       </div>
 
-      {/* 모바일: 축약 헤더 (로고 + 알림) */}
-      <div className="flex h-14 items-center justify-between px-6 md:hidden">
+      {/* 모바일: 축약 헤더 (로고 + 알림). 콘텐츠 모바일 패딩(px-4)과 맞춤 */}
+      <div className="flex h-14 items-center justify-between px-4 md:hidden">
         <Link href="/" className="text-subtitle font-semibold text-accent">
           ARS
         </Link>
