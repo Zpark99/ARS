@@ -22,9 +22,19 @@ export type AlbumCardBadge =
 
 type AlbumCardProps = Album & {
   badge?: AlbumCardBadge;
+  /** 홈 캐러셀 등 평점 텍스트가 필요 없는 자리에서 false로 숨김. 평점은 앨범 허브 정보탭이 기준. */
+  showRating?: boolean;
 };
 
-export function AlbumCard({ mbid, title, artist, rating, coverUrl, badge }: AlbumCardProps) {
+export function AlbumCard({
+  mbid,
+  title,
+  artist,
+  rating,
+  coverUrl,
+  badge,
+  showRating = true,
+}: AlbumCardProps) {
   return (
     <Link href={`/album/${mbid}`} className="group block">
       <article className="flex flex-col gap-2 rounded-md border border-border bg-surface p-3 transition-colors group-hover:border-text-muted/40">
@@ -48,7 +58,7 @@ export function AlbumCard({ mbid, title, artist, rating, coverUrl, badge }: Albu
           {title}
         </h3>
         <p className="line-clamp-1 text-[13px] text-text-muted">{artist}</p>
-        <RatingStars value={rating} size={16} />
+        {showRating ? <RatingStars value={rating} size={16} /> : null}
       </article>
     </Link>
   );
