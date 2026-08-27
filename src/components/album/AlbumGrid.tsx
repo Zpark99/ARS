@@ -2,7 +2,7 @@
 // Figma AlbumGrid 대응. 2열 그리드. 카드 높이 정렬은 CSS Grid가 자동 처리.
 // 아카이브(/archive) · 검색(/search) 공용
 
-import { AlbumCard, type Album } from "@/components/album/AlbumCard";
+import { AlbumCard, type Album } from "@/components/cards/AlbumCard";
 
 export function AlbumGrid({ albums }: { albums: Album[] }) {
   if (albums.length === 0) {
