@@ -31,6 +31,8 @@ const DUMMY_GALLERY_POSTS: GalleryRowData[] = [
   { id: "1", title: "공지 - 갤러리 이용 안내", author: "운영자", likeCount: 12, time: "1시간 전", flag: "notice" },
   { id: "2", title: "컨셉포토 떴다", author: "fan1", likeCount: 34, time: "2시간 전", flag: "concept" },
   { id: "3", title: "오늘 무대 인생 직캠", author: "fan2", likeCount: 21, time: "3시간 전" },
+  { id: "4", title: "이번 주 스포티파이 순위", author: "fan3", likeCount: 15, time: "4시간 전" },
+  { id: "5", title: "굿즈 공동구매 정리", author: "fan4", likeCount: 9, time: "6시간 전", visited: true },
 ];
 
 const DUMMY_PROMOS: PromoCardData[] = [
