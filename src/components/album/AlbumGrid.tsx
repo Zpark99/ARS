@@ -1,6 +1,6 @@
 // components/album/AlbumGrid.tsx
-// Figma AlbumGrid 대응. 2열 그리드. 카드 높이 정렬은 CSS Grid가 자동 처리.
-// 아카이브(/archive) · 검색(/search) 공용
+// Figma AlbumGrid 대응. 웹 6열 / 모바일 2열. 카드 높이 정렬은 CSS Grid가 자동 처리.
+// 아카이브(/archive) 공용
 
 import { AlbumCard, type Album } from "@/components/cards/AlbumCard";
 
@@ -14,9 +14,9 @@ export function AlbumGrid({ albums }: { albums: Album[] }) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-6">
       {albums.map((album) => (
-        <AlbumCard key={album.id} {...album} />
+        <AlbumCard key={album.id} {...album} showRating={false} />
       ))}
     </div>
   );
