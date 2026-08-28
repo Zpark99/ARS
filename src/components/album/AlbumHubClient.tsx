@@ -45,7 +45,7 @@ export function AlbumHubClient({
   const [activeTab, setActiveTab] = useState<HubTab>("info");
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col">
+    <div className="mx-auto flex max-w-[1364px] flex-col">
       <AlbumHeader
         albumId={albumId}
         title={title}
