@@ -1,8 +1,5 @@
 import { notFound } from 'next/navigation'
-import AlbumCover from '@/components/AlbumCover'
-import RatingSection from '@/components/RatingSection'
-import CommentSection from '@/components/CommentSection'
-import AlbumLikeButton from '@/components/AlbumLikeButton'
+import { AlbumHubClient } from '@/components/album/AlbumHubClient'
 import { createClient } from '@/lib/supabase/server'
 import type { AlbumRow, CommentRow } from '@/types/album'
 
@@ -136,49 +133,20 @@ export default async function AlbumPage({
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <main className="max-w-lg mx-auto">
-        {/* 앨범 커버 — 모바일: 전체 너비, md 이상: 중앙 정렬 + 최대 너비 제한 */}
-        <div className="md:max-w-xs md:mx-auto md:mt-6">
-          <AlbumCover
-            src={album.cover_url}
-            alt={`${album.title} 앨범 커버`}
-          />
-        </div>
-
-        {/* 앨범 정보 */}
-        <div className="px-4 pt-4 pb-3">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-snug">
-            {album.title}
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{album.artist_name}</p>
-          <div className="mt-3">
-            <AlbumLikeButton
-              albumId={album.id}
-              initialLiked={albumLiked}
-              initialCount={albumLikeCount}
-              isLoggedIn={!!user}
-            />
-          </div>
-        </div>
-
-        {/* 별점 영역 */}
-        <RatingSection
-          albumId={album.id}
-          initialAvg={ratingAvg}
-          initialCount={ratingCount}
-          initialMyScore={myScore}
-          isLoggedIn={!!user}
-        />
-
-        {/* 코멘트 영역 */}
-        <CommentSection
-          albumId={album.id}
-          initialComments={(comments ?? []) as CommentRow[]}
-          currentUserId={user?.id ?? null}
-          commentLikes={commentLikes}
-        />
-      </main>
-    </div>
+    <AlbumHubClient
+      albumId={album.id}
+      title={album.title}
+      artistName={album.artist_name}
+      coverUrl={album.cover_url}
+      isLoggedIn={!!user}
+      currentUserId={user?.id ?? null}
+      albumLiked={albumLiked}
+      albumLikeCount={albumLikeCount}
+      ratingAvg={ratingAvg}
+      ratingCount={ratingCount}
+      myScore={myScore}
+      comments={(comments ?? []) as CommentRow[]}
+      commentLikes={commentLikes}
+    />
   )
 }
