@@ -11,6 +11,8 @@ import { ReactionTab } from "./ReactionTab";
 import { PromoTab } from "./PromoTab";
 import { GalleryTab } from "./GalleryTab";
 import type { CommentRow } from "@/types/album";
+import type { PromoCardData } from "@/components/cards/PromoCard";
+import type { GalleryRowData } from "@/components/cards/GalleryRow";
 
 export function AlbumHubClient({
   albumId,
@@ -26,6 +28,8 @@ export function AlbumHubClient({
   myScore,
   comments,
   commentLikes,
+  promos,
+  galleryPosts,
 }: {
   albumId: string;
   title: string;
@@ -40,6 +44,8 @@ export function AlbumHubClient({
   myScore: number | null;
   comments: CommentRow[];
   commentLikes: Record<string, { count: number; liked: boolean }>;
+  promos: PromoCardData[];
+  galleryPosts: GalleryRowData[];
 }) {
   // 재설계 전(평가 페이지) 기본 진입점이 평점이었던 것과 동일하게, 정보 탭을 기본값으로 유지
   const [activeTab, setActiveTab] = useState<HubTab>("info");
@@ -57,8 +63,8 @@ export function AlbumHubClient({
       />
       <HubTabs active={activeTab} onChange={setActiveTab} />
 
-      {activeTab === "promo" && <PromoTab />}
-      {activeTab === "gallery" && <GalleryTab />}
+      {activeTab === "promo" && <PromoTab promos={promos} />}
+      {activeTab === "gallery" && <GalleryTab posts={galleryPosts} />}
       {activeTab === "reaction" && (
         <ReactionTab
           albumId={albumId}
