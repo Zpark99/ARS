@@ -171,11 +171,14 @@ export default async function AlbumPage({
 
   const commentCounts: Record<string, number> = {}
   if (promoIds.length > 0) {
-    const { data: promoComments } = await supabase
+    const { data: promoComments, error: promoCommentsErr } = await supabase
       .from('comments')
       .select('target_id')
       .eq('target_type', 'post')
       .in('target_id', promoIds)
+    if (promoCommentsErr) {
+      console.error('promo comments fetch failed:', promoCommentsErr)
+    }
     for (const c of promoComments ?? []) {
       commentCounts[c.target_id] = (commentCounts[c.target_id] ?? 0) + 1
     }
@@ -200,12 +203,15 @@ export default async function AlbumPage({
       created_at: string
       post_flag: GalleryPostFlag
     }
-    const { data: galleryRows } = await supabase
+    const { data: galleryRows, error: galleryErr } = await supabase
       .from('gallery_posts')
       .select('id, title, user_id, created_at, post_flag')
       .eq('artist_id', artistResult.data.id)
       .order('created_at', { ascending: false })
       .limit(20)
+    if (galleryErr) {
+      console.error('gallery posts fetch failed:', galleryErr)
+    }
 
     // 반응 탭(ReactionTab)과 동일한 패턴: 닉네임 조인 없이 user_id 앞 8자리만 표시
     galleryPosts = ((galleryRows ?? []) as GalleryPostRow[]).map((g) => ({
