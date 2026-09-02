@@ -7,8 +7,7 @@ import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/Input";
 import { CategoryTab } from "@/components/ui/CategoryTab";
 import { Button } from "@/components/ui/Button";
-import { GalleryCard } from "@/components/cards/GalleryCard";
-import type { DummyGallery } from "@/lib/dummy/galleryData";
+import { GalleryCard, type GalleryCardData } from "@/components/cards/GalleryCard";
 
 const SORTS = [
   { key: "popular", label: "인기" },
@@ -18,7 +17,7 @@ const SORTS = [
 
 type SortKey = (typeof SORTS)[number]["key"];
 
-export function GalleryAllClient({ galleries }: { galleries: DummyGallery[] }) {
+export function GalleryAllClient({ galleries }: { galleries: GalleryCardData[] }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("popular");
 
@@ -28,7 +27,7 @@ export function GalleryAllClient({ galleries }: { galleries: DummyGallery[] }) {
     const sorted = [...result];
     if (sort === "abc") sorted.sort((a, b) => a.name.localeCompare(b.name, "ko"));
     else if (sort === "popular") sorted.sort((a, b) => b.subCount - a.subCount);
-    // "신설"은 등록일 기준 — 더미엔 등록일이 없어 원래 순서(#88에서 실제 정렬 연결)
+    // "신설"은 등록일 기준 — artists에 등록일을 이 카드 shape로 안 내려서 원래 순서 유지
     return sorted;
   }, [galleries, query, sort]);
 
