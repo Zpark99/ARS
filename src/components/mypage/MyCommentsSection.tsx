@@ -21,9 +21,10 @@ export interface MyComment {
 
 interface Props {
   comments: MyComment[]
+  title?: string
 }
 
-export default function MyCommentsSection({ comments }: Props) {
+export default function MyCommentsSection({ comments, title = '내 코멘트' }: Props) {
   const [open, setOpen] = useState(true)
 
   return (
@@ -32,7 +33,7 @@ export default function MyCommentsSection({ comments }: Props) {
         onClick={() => setOpen((prev) => !prev)}
         className="w-full flex items-center justify-between px-4 py-2 text-left"
       >
-        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">내 코멘트</h2>
+        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">{title}</h2>
         <svg
           width="16"
           height="16"
