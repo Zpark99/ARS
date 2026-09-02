@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import { TeamGalleryClient } from "@/components/gallery/TeamGalleryClient";
 import type { GalleryRowData, GalleryPostFlag } from "@/components/cards/GalleryRow";
 import { createClient } from "@/lib/supabase/server";
+import { isValidUUID } from "@/lib/validation/like";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("ko-KR", {
@@ -30,6 +31,13 @@ export default async function TeamGalleryPage({
   params: Promise<{ artistId: string }>;
 }) {
   const { artistId } = await params;
+
+  // 더미/가짜 라우팅 식별자가 라이브까지 새는 걸 막는 가드 (#109, mbid-1류 재발 3회 방지)
+  if (!isValidUUID(artistId)) {
+    console.error(`invalid artistId format: ${artistId} (path: /gallery/${artistId})`);
+    notFound();
+  }
+
   const supabase = await createClient();
 
   const [artistResult, authResult] = await Promise.all([
