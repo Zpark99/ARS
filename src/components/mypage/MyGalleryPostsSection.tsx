@@ -12,6 +12,7 @@ export interface MyGalleryPost {
 
 interface Props {
   posts: MyGalleryPost[]
+  title?: string
 }
 
 function formatDate(iso: string) {
@@ -20,7 +21,7 @@ function formatDate(iso: string) {
   return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`
 }
 
-export default function MyGalleryPostsSection({ posts }: Props) {
+export default function MyGalleryPostsSection({ posts, title = '내 갤러리 글' }: Props) {
   const [open, setOpen] = useState(true)
 
   return (
@@ -29,7 +30,7 @@ export default function MyGalleryPostsSection({ posts }: Props) {
         onClick={() => setOpen((prev) => !prev)}
         className="w-full flex items-center justify-between px-4 py-2 text-left"
       >
-        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">내 갤러리 글</h2>
+        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">{title}</h2>
         <svg
           width="16"
           height="16"

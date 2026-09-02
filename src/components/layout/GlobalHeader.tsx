@@ -85,7 +85,7 @@ export function GlobalHeader({ user = null }: GlobalHeaderProps) {
 
           {user ? (
             <div className="flex items-center gap-3">
-              <Link href="/mypage" className="flex items-center gap-2">
+              <Link href={`/profile/${user.id}`} className="flex items-center gap-2">
                 <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-surface ring-1 ring-border">
                   {user.avatarUrl ? (
                     <Image

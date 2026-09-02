@@ -3,6 +3,8 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import FollowButton from '@/components/profile/FollowButton'
 import UserAlbumList from '@/components/profile/UserAlbumList'
+import MyCommentsSection, { type MyComment } from '@/components/mypage/MyCommentsSection'
+import MyGalleryPostsSection, { type MyGalleryPost } from '@/components/mypage/MyGalleryPostsSection'
 import type { AlbumRow } from '@/types/album'
 import type { ProfileRow } from '@/types/profile'
 
@@ -92,6 +94,41 @@ export default async function ProfilePage({
   const likedMap = new Map(likedAlbumsRaw.map((a) => [a.id, a as AlbumRow]))
   const likedAlbums = likedIds.map((lid) => likedMap.get(lid)).filter((a): a is AlbumRow => !!a)
 
+  // 4. 코멘트 + 갤러리 글 (마이페이지에서 흡수, 공개 열람 - comments/gallery_posts RLS: SELECT USING (true))
+  const [commentsResult, postsResult] = await Promise.all([
+    supabase
+      .from('comments')
+      .select('id, content, created_at, target_id')
+      .eq('user_id', id)
+      .eq('target_type', 'album')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('gallery_posts')
+      .select('id, artist_name, title, created_at')
+      .eq('user_id', id)
+      .order('created_at', { ascending: false }),
+  ])
+
+  const comments = commentsResult.data ?? []
+  // comments.target_id에 FK 없어 직접 조인 (다형성 전환으로 albums!inner 불가)
+  const commentAlbumIds = [...new Set(comments.map((c) => c.target_id))]
+  const commentAlbumsRaw =
+    commentAlbumIds.length > 0
+      ? ((await supabase
+          .from('albums')
+          .select('id, mbid, title, artist_name, cover_url')
+          .in('id', commentAlbumIds)).data ?? [])
+      : []
+  const commentAlbumMap = new Map(commentAlbumsRaw.map((a) => [a.id, a as AlbumRow]))
+  const myComments: MyComment[] = comments.map((c) => ({
+    id: c.id,
+    content: c.content,
+    created_at: c.created_at,
+    albums: commentAlbumMap.get(c.target_id) ?? null,
+  }))
+
+  const myPosts = (postsResult.data ?? []) as MyGalleryPost[]
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <main className="max-w-lg mx-auto pb-12">
@@ -120,6 +157,9 @@ export default async function ProfilePage({
               <p className="text-base font-bold text-gray-900 dark:text-gray-100 truncate">
                 {profile.nickname}
               </p>
+              {isOwn && user?.email && (
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{user.email}</p>
+              )}
               {profile.bio && (
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 break-words">
                   {profile.bio}
@@ -172,6 +212,16 @@ export default async function ProfilePage({
           rightMark="heart"
           items={likedAlbums.map((album) => ({ album }))}
         />
+
+        {/* 코멘트 + 갤러리 글 (마이페이지 흡수, #71) */}
+        <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800 border-t border-gray-100 dark:border-gray-800">
+          <div className="pt-5 pb-2">
+            <MyCommentsSection comments={myComments} title={isOwn ? '내 코멘트' : '코멘트'} />
+          </div>
+          <div className="pt-5 pb-2">
+            <MyGalleryPostsSection posts={myPosts} title={isOwn ? '내 갤러리 글' : '갤러리 글'} />
+          </div>
+        </div>
 
       </main>
     </div>

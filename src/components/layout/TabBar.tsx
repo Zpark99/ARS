@@ -18,11 +18,10 @@ const TABS: TabItem[] = [
 ];
 
 // 더보기 시트에 담기는 항목. 라우트는 GlobalHeader와 동일하게 통일.
-const MORE_ITEMS = [
+const MORE_ITEMS_BASE = [
   { href: "/gallery", label: "갤러리" },
   { href: "/qa", label: "Q&A" },
   { href: "/updates", label: "업데이트" },
-  { href: "/mypage", label: "프로필" },
 ];
 
 type TabBarUser = { id: string; name: string } | null;
@@ -38,6 +37,12 @@ export function TabBar({ user = null }: TabBarProps) {
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
+
+  // 로그인 시 본인 프로필로 바로 이동, 비로그인 시 /mypage(→ /login 리다이렉트)로 유지
+  const MORE_ITEMS = [
+    ...MORE_ITEMS_BASE,
+    { href: user ? `/profile/${user.id}` : "/mypage", label: "프로필" },
+  ];
 
   const moreActive = MORE_ITEMS.some((item) => isActive(item.href));
 
