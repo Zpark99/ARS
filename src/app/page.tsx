@@ -1,6 +1,5 @@
 // app/page.tsx
-// 컴포넌트스펙_3_홈카드조립. 홈 4섹션 콘텐츠 허브 (#68).
-// 1단계: 레이아웃 확정 (더미 데이터). 2단계: Supabase 실데이터 연결 예정 — 아래 DUMMY_* 전부 교체 대상.
+// 컴포넌트스펙_3_홈카드조립. 홈 4섹션 콘텐츠 허브 (#68 → #88 실데이터 연결).
 
 import { MonthlyAlbumsSection, type MonthlyAlbum } from "@/components/home/MonthlyAlbumsSection";
 import { RealtimeFeedSection } from "@/components/home/RealtimeFeedSection";
@@ -12,68 +11,306 @@ import type { FeedItemData } from "@/components/cards/FeedItem";
 import type { GalleryRowData } from "@/components/cards/GalleryRow";
 import type { PromoCardData } from "@/components/cards/PromoCard";
 import type { AlbumCarouselItem } from "@/components/home/AlbumCarousel";
+import { createClient } from "@/lib/supabase/server";
 
-const DUMMY_MONTHLY_ALBUMS: MonthlyAlbum[] = [
-  { id: "1", mbid: "mbid-1", title: "Ballad Pop", artist: "검정치마", rating: 4.2, coverUrl: null, likeCount: 128 },
-  { id: "2", mbid: "mbid-2", title: "Beautiful Future", artist: "잔나비", rating: 4.6, coverUrl: null, likeCount: 96 },
-  { id: "3", mbid: "mbid-3", title: "New Wave", artist: "혁오", rating: 3.9, coverUrl: null, likeCount: 64 },
-  { id: "4", mbid: "mbid-4", title: "Midnight", artist: "정승환", rating: 4.0, coverUrl: null, likeCount: 55 },
-  { id: "5", mbid: "mbid-5", title: "Sunset Drive", artist: "적재", rating: 4.4, coverUrl: null, likeCount: 41 },
-];
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 
-const DUMMY_FEED: FeedItemData[] = [
-  { actorName: "hong", action: "검정치마 앨범에 평가를 남겼어요", time: "5분 전", href: "#" },
-  { actorName: "jane", action: "잔나비 갤러리에 글을 남겼어요", time: "12분 전", href: "#" },
-  { actorName: "min", action: "혁오 앨범을 좋아요했어요", time: "30분 전", href: "#" },
-];
+type AlbumBase = {
+  id: string;
+  mbid: string;
+  title: string;
+  artist_name: string;
+  cover_url: string | null;
+};
 
-const DUMMY_GALLERY_POSTS: GalleryRowData[] = [
-  { id: "1", title: "공지 - 갤러리 이용 안내", author: "운영자", likeCount: 12, time: "1시간 전", flag: "notice" },
-  { id: "2", title: "컨셉포토 떴다", author: "fan1", likeCount: 34, time: "2시간 전", flag: "concept" },
-  { id: "3", title: "오늘 무대 인생 직캠", author: "fan2", likeCount: 21, time: "3시간 전" },
-  { id: "4", title: "이번 주 스포티파이 순위", author: "fan3", likeCount: 15, time: "4시간 전" },
-  { id: "5", title: "굿즈 공동구매 정리", author: "fan4", likeCount: 9, time: "6시간 전", visited: true },
-];
+async function getMonthlyAlbums(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<MonthlyAlbum[]> {
+  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from("ratings")
+    .select("score, album_id, albums!inner(id, mbid, title, artist_name, cover_url, like_count)")
+    .gte("created_at", cutoff);
+  if (error) console.error("monthly albums fetch failed:", error);
 
-const DUMMY_PROMOS: PromoCardData[] = [
-  { id: "1", title: "신곡 홍보 부탁드립니다", team: "잔나비", thumbnailUrl: null, likeCount: 8, commentCount: 2, time: "10분 전" },
-  { id: "2", title: "팀 연결 없는 홍보글", team: null, thumbnailUrl: null, likeCount: 1, commentCount: 0, time: "1일 전" },
-];
+  type Row = { score: number; album_id: string; albums: AlbumBase & { like_count: number } };
+  const rows = (data ?? []) as unknown as Row[];
 
-const DUMMY_REVIEWED_ALBUMS: ReviewedAlbum[] = [
-  { id: "1", mbid: "mbid-1", title: "Ballad Pop", artist: "검정치마", rating: 4.2, coverUrl: null, reviewText: "가사가 좋고 프로듀싱이 안정적이에요." },
-  { id: "2", mbid: "mbid-2", title: "Beautiful Future", artist: "잔나비", rating: 4.6, coverUrl: null, reviewText: "밴드 사운드가 이번에 특히 좋았어요." },
-  { id: "3", mbid: "mbid-3", title: "New Wave", artist: "혁오", rating: 3.9, coverUrl: null, reviewText: "실험적인 트랙이 많아 호불호가 갈릴 듯." },
-  { id: "4", mbid: "mbid-4", title: "Midnight", artist: "정승환", rating: 4.0, coverUrl: null, reviewText: "발라드 팬이라면 놓치면 아쉬운 앨범." },
-];
+  const byAlbum = new Map<string, { album: Row["albums"]; sum: number; count: number }>();
+  for (const r of rows) {
+    const entry = byAlbum.get(r.album_id) ?? { album: r.albums, sum: 0, count: 0 };
+    entry.sum += r.score;
+    entry.count += 1;
+    byAlbum.set(r.album_id, entry);
+  }
 
-const DUMMY_RECENT_RELEASES: AlbumCarouselItem[] = [
-  { id: "5", mbid: "mbid-5", title: "Sunset Drive", artist: "적재", rating: 4.4, coverUrl: null },
-  { id: "6", mbid: "mbid-6", title: "New Single", artist: "10CM", rating: 4.1, coverUrl: null },
-  { id: "7", mbid: "mbid-7", title: "First EP", artist: "볼빨간사춘기", rating: 3.8, coverUrl: null },
-  { id: "8", mbid: "mbid-8", title: "Reissue", artist: "자우림", rating: 4.5, coverUrl: null },
-  { id: "9", mbid: "mbid-9", title: "Late Night", artist: "실리카겔", rating: 4.3, coverUrl: null },
-  { id: "10", mbid: "mbid-10", title: "Home Recording", artist: "박재범", rating: 4.0, coverUrl: null },
-  { id: "11", mbid: "mbid-11", title: "Winter Story", artist: "아이유", rating: 4.7, coverUrl: null },
-  { id: "12", mbid: "mbid-12", title: "Debut", artist: "데이식스", rating: 4.2, coverUrl: null },
-];
+  return [...byAlbum.values()]
+    .map(({ album, sum, count }) => ({
+      id: album.id,
+      mbid: album.mbid,
+      title: album.title,
+      artist: album.artist_name,
+      rating: sum / count,
+      coverUrl: album.cover_url,
+      likeCount: album.like_count,
+    }))
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 10);
+}
 
-export default function HomePage() {
+async function getRealtimeFeed(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<FeedItemData[]> {
+  type Event = { userId: string; createdAt: string; action: string; href: string };
+
+  const [ratingsResult, likesResult, galleryResult] = await Promise.all([
+    supabase
+      .from("ratings")
+      .select("user_id, created_at, albums!inner(mbid, artist_name)")
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("likes")
+      .select("user_id, created_at, target_id")
+      .eq("target_type", "album")
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("gallery_posts")
+      .select("user_id, created_at, artist_id, artists(name)")
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
+  if (ratingsResult.error) console.error("feed ratings fetch failed:", ratingsResult.error);
+  if (likesResult.error) console.error("feed likes fetch failed:", likesResult.error);
+  if (galleryResult.error) console.error("feed gallery fetch failed:", galleryResult.error);
+
+  const events: Event[] = [];
+
+  type RatingRow = { user_id: string; created_at: string; albums: { mbid: string; artist_name: string } };
+  for (const r of (ratingsResult.data ?? []) as unknown as RatingRow[]) {
+    events.push({
+      userId: r.user_id,
+      createdAt: r.created_at,
+      action: `${r.albums.artist_name} 앨범에 평가를 남겼어요`,
+      href: `/album/${r.albums.mbid}`,
+    });
+  }
+
+  const likeTargetIds = [...new Set((likesResult.data ?? []).map((l) => l.target_id))];
+  const likedAlbumsMap = new Map<string, { mbid: string; artist_name: string }>();
+  if (likeTargetIds.length > 0) {
+    const { data: likedAlbums } = await supabase
+      .from("albums")
+      .select("id, mbid, artist_name")
+      .in("id", likeTargetIds);
+    for (const a of likedAlbums ?? []) likedAlbumsMap.set(a.id, a);
+  }
+  for (const l of likesResult.data ?? []) {
+    const album = likedAlbumsMap.get(l.target_id);
+    if (!album) continue;
+    events.push({
+      userId: l.user_id,
+      createdAt: l.created_at,
+      action: `${album.artist_name} 앨범을 좋아요했어요`,
+      href: `/album/${album.mbid}`,
+    });
+  }
+
+  type GalleryRow = { user_id: string; created_at: string; artist_id: string; artists: { name: string } | null };
+  for (const g of (galleryResult.data ?? []) as unknown as GalleryRow[]) {
+    events.push({
+      userId: g.user_id,
+      createdAt: g.created_at,
+      action: `${g.artists?.name ?? "알 수 없는 팀"} 갤러리에 글을 남겼어요`,
+      href: `/gallery/${g.artist_id}`,
+    });
+  }
+
+  events.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  const top = events.slice(0, 8);
+
+  const userIds = [...new Set(top.map((e) => e.userId))];
+  const profileMap = new Map<string, { nickname: string; avatar_url: string | null }>();
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, nickname, avatar_url")
+      .in("id", userIds);
+    for (const p of profiles ?? []) profileMap.set(p.id, p);
+  }
+
+  return top.map((e) => {
+    const profile = profileMap.get(e.userId);
+    return {
+      actorName: profile?.nickname || "사용자",
+      actorAvatarUrl: profile?.avatar_url ?? null,
+      action: e.action,
+      time: formatDate(e.createdAt),
+      href: e.href,
+    };
+  });
+}
+
+async function getGalleryHotPosts(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<GalleryRowData[]> {
+  const { data, error } = await supabase
+    .from("gallery_posts")
+    .select("id, title, user_id, created_at, post_flag")
+    .order("created_at", { ascending: false })
+    .limit(5);
+  if (error) console.error("home gallery hot posts fetch failed:", error);
+
+  return (data ?? []).map((p) => ({
+    id: p.id,
+    title: p.title,
+    author: `사용자 ${p.user_id.slice(0, 8)}`,
+    likeCount: 0, // gallery_posts는 아직 좋아요 스키마 없음 (#104 백로그)
+    time: formatDate(p.created_at),
+    flag: p.post_flag,
+  }));
+}
+
+async function getHomePromos(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<PromoCardData[]> {
+  const { data, error } = await supabase
+    .from("board_posts")
+    .select("id, title, like_count, created_at, artists(name)")
+    .eq("board_type", "promo")
+    .order("created_at", { ascending: false })
+    .limit(5);
+  if (error) console.error("home promos fetch failed:", error);
+
+  type Row = { id: string; title: string; like_count: number; created_at: string; artists: { name: string } | null };
+  const rows = (data ?? []) as unknown as Row[];
+  const postIds = rows.map((p) => p.id);
+
+  const commentCounts: Record<string, number> = {};
+  if (postIds.length > 0) {
+    const { data: comments } = await supabase
+      .from("comments")
+      .select("target_id")
+      .eq("target_type", "post")
+      .in("target_id", postIds);
+    for (const c of comments ?? []) {
+      commentCounts[c.target_id] = (commentCounts[c.target_id] ?? 0) + 1;
+    }
+  }
+
+  return rows.map((p) => ({
+    id: p.id,
+    title: p.title,
+    team: p.artists?.name ?? null,
+    thumbnailUrl: null,
+    likeCount: p.like_count,
+    commentCount: commentCounts[p.id] ?? 0,
+    time: formatDate(p.created_at),
+  }));
+}
+
+async function getAlbumHubReviews(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<ReviewedAlbum[]> {
+  const { data: comments, error } = await supabase
+    .from("comments")
+    .select("target_id, content, created_at")
+    .eq("target_type", "album")
+    .order("created_at", { ascending: false })
+    .limit(20);
+  if (error) console.error("home reviews fetch failed:", error);
+
+  // 앨범당 가장 최근 코멘트 1건만 남기고 4개로 제한
+  const latestByAlbum = new Map<string, { content: string; created_at: string }>();
+  for (const c of comments ?? []) {
+    if (!latestByAlbum.has(c.target_id)) {
+      latestByAlbum.set(c.target_id, { content: c.content, created_at: c.created_at });
+    }
+  }
+  const albumIds = [...latestByAlbum.keys()].slice(0, 4);
+  if (albumIds.length === 0) return [];
+
+  const { data: albums } = await supabase
+    .from("albums")
+    .select("id, mbid, title, artist_name, cover_url, ratings(score)")
+    .in("id", albumIds);
+
+  type Row = AlbumBase & { ratings: { score: number }[] };
+  return ((albums ?? []) as unknown as Row[]).map((a) => {
+    const scores = a.ratings.map((r) => r.score);
+    const avg = scores.length > 0 ? scores.reduce((s, v) => s + v, 0) / scores.length : 0;
+    return {
+      id: a.id,
+      mbid: a.mbid,
+      title: a.title,
+      artist: a.artist_name,
+      rating: avg,
+      coverUrl: a.cover_url,
+      reviewText: latestByAlbum.get(a.id)?.content ?? "",
+    };
+  });
+}
+
+async function getRecentReleases(
+  supabase: Awaited<ReturnType<typeof createClient>>
+): Promise<AlbumCarouselItem[]> {
+  // albums에 실제 발매일 컬럼이 없어(스키마 변경 스코프 밖) DB 등록일(created_at)로 대체
+  const { data, error } = await supabase
+    .from("albums")
+    .select("id, mbid, title, artist_name, cover_url, ratings(score)")
+    .order("created_at", { ascending: false })
+    .limit(8);
+  if (error) console.error("recent releases fetch failed:", error);
+
+  type Row = AlbumBase & { ratings: { score: number }[] };
+  return ((data ?? []) as unknown as Row[]).map((a) => {
+    const scores = a.ratings.map((r) => r.score);
+    const avg = scores.length > 0 ? scores.reduce((s, v) => s + v, 0) / scores.length : 0;
+    return {
+      id: a.id,
+      mbid: a.mbid,
+      title: a.title,
+      artist: a.artist_name,
+      rating: avg,
+      coverUrl: a.cover_url,
+    };
+  });
+}
+
+export default async function HomePage() {
+  const supabase = await createClient();
+
+  const [monthlyAlbums, feed, galleryPosts, promos, reviewedAlbums, recentReleases] = await Promise.all([
+    getMonthlyAlbums(supabase),
+    getRealtimeFeed(supabase),
+    getGalleryHotPosts(supabase),
+    getHomePromos(supabase),
+    getAlbumHubReviews(supabase),
+    getRecentReleases(supabase),
+  ]);
+
   return (
     <div className="mx-auto flex max-w-[1364px] flex-col gap-5 px-4 py-6 md:px-6">
       <section className="grid grid-cols-1 gap-5 md:grid-cols-[972fr_372fr]">
-        <MonthlyAlbumsSection albums={DUMMY_MONTHLY_ALBUMS} />
-        <RealtimeFeedSection items={DUMMY_FEED} />
+        <MonthlyAlbumsSection albums={monthlyAlbums} />
+        <RealtimeFeedSection items={feed} />
       </section>
 
       <section className="grid grid-cols-1 gap-5 md:grid-cols-2">
-        <GalleryHotSection posts={DUMMY_GALLERY_POSTS} />
-        <PromoSection promos={DUMMY_PROMOS} />
+        <GalleryHotSection posts={galleryPosts} />
+        <PromoSection promos={promos} />
       </section>
 
-      <AlbumHubReviewSection albums={DUMMY_REVIEWED_ALBUMS} />
+      <AlbumHubReviewSection albums={reviewedAlbums} />
 
-      <RecentReleasesSection albums={DUMMY_RECENT_RELEASES} />
+      <RecentReleasesSection albums={recentReleases} />
     </div>
   );
 }
