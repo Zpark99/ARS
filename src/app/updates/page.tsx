@@ -16,7 +16,7 @@ export default async function UpdatesPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-bg">
       <main>
         <BoardClient
           boardType="updates"

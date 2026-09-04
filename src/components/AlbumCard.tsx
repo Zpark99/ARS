@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import AlbumCover from '@/components/AlbumCover'
 import type { SearchResult } from '@/types/search'
 
 interface AlbumCardProps {
@@ -15,45 +16,22 @@ export default function AlbumCard({ album, avgScore, ratingCount }: AlbumCardPro
   return (
     <Link
       href={`/album/${mbid}`}
-      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-800 transition-colors"
+      className="flex items-center gap-3 px-4 py-3 hover:bg-surface active:bg-surface transition-colors"
     >
       {/* 정사각 앨범 커버 */}
-      <div className="relative w-16 h-16 flex-shrink-0 rounded bg-gray-100 dark:bg-gray-800 overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            className="text-gray-300 dark:text-gray-600"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <circle cx="12" cy="12" r="3" />
-            <line x1="12" y1="2" x2="12" y2="9" />
-          </svg>
-        </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={cover_url}
-          alt={`${title} 앨범 커버`}
-          className="absolute inset-0 w-full h-full object-cover"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none'
-          }}
-        />
+      <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden">
+        <AlbumCover src={cover_url ?? null} alt={`${title} 앨범 커버`} />
       </div>
 
       {/* 텍스트 정보 */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{title}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{artist_name}</p>
+        <p className="text-sm font-semibold text-text truncate">{title}</p>
+        <p className="text-xs text-text-muted mt-0.5 truncate">{artist_name}</p>
         {avgScore !== undefined && (
           <p className="text-xs text-yellow-500 mt-1">
             ★ {avgScore.toFixed(1)}
             {ratingCount !== undefined && (
-              <span className="text-gray-400 dark:text-gray-500 ml-1">({ratingCount}명)</span>
+              <span className="text-text-muted ml-1">({ratingCount}명)</span>
             )}
           </p>
         )}

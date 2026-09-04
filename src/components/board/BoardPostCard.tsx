@@ -49,30 +49,30 @@ export default function BoardPostCard({ post, currentUserId, onUpdate, onDelete 
   }
 
   return (
-    <div className="border-b border-gray-100 dark:border-gray-800">
+    <div className="border-b border-border">
       {/* 목록 행 */}
       <button
         onClick={() => { setIsOpen((prev) => !prev); setIsEditing(false) }}
-        className="w-full text-left px-4 py-3 flex items-start justify-between gap-2 active:bg-gray-50 dark:active:bg-gray-800"
+        className="w-full text-left px-4 py-3 flex items-start justify-between gap-2 active:bg-surface"
       >
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{post.title}</p>
+          <p className="text-sm font-medium text-text truncate">{post.title}</p>
           {(post.artist || post.album) && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+            <p className="text-xs text-text-muted mt-0.5 truncate">
               {post.artist?.name}
               {post.artist && post.album ? ' · ' : ''}
               {post.album?.title}
             </p>
           )}
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+          <p className="text-xs text-text-muted mt-0.5">
             {currentUserId === post.user_id ? '나' : `사용자 ${post.user_id.slice(0, 8)}`} · {formatDate(post.created_at)}
             {isModified && (
-              <span className="ml-1.5 text-gray-400 dark:text-gray-500">(수정됨)</span>
+              <span className="ml-1.5 text-text-muted">(수정됨)</span>
             )}
           </p>
         </div>
         <svg
-          className={`shrink-0 mt-0.5 text-gray-400 dark:text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`shrink-0 mt-0.5 text-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
           width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
         >
@@ -93,7 +93,7 @@ export default function BoardPostCard({ post, currentUserId, onUpdate, onDelete 
             />
           ) : (
             <>
-              <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+              <p className="text-sm text-text whitespace-pre-wrap leading-relaxed">
                 {post.content}
               </p>
               <div className="flex items-center justify-between mt-3">
@@ -102,7 +102,7 @@ export default function BoardPostCard({ post, currentUserId, onUpdate, onDelete 
                   <div className="flex gap-3">
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="text-xs text-gray-500 dark:text-gray-400 underline underline-offset-2 active:text-gray-800 dark:active:text-gray-200"
+                      className="text-xs text-text-muted underline underline-offset-2 active:text-text"
                     >
                       수정
                     </button>

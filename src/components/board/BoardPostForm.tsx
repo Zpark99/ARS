@@ -88,7 +88,7 @@ export default function BoardPostForm({
             value={artistInput}
             onChange={(e) => setArtistInput(e.target.value)}
             placeholder="팀 검색 (선택)"
-            className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-gray-500 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
           />
           <datalist id="promo-artist-options">
             {artists.map((a) => (
@@ -103,7 +103,7 @@ export default function BoardPostForm({
                 value={albumInput}
                 onChange={(e) => setAlbumInput(e.target.value)}
                 placeholder="앨범 검색 (선택)"
-                className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-gray-500 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+                className="flex-1 border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
               />
               <datalist id="promo-album-options">
                 {albums.map((al) => (
@@ -121,9 +121,9 @@ export default function BoardPostForm({
           onChange={(e) => setTitle(e.target.value)}
           placeholder="제목"
           maxLength={MAX_BOARD_TITLE_LENGTH}
-          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-gray-500 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+          className="w-full border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
         />
-        <p className="text-right text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+        <p className="text-right text-xs text-text-muted mt-0.5">
           {title.length}/{MAX_BOARD_TITLE_LENGTH}
         </p>
       </div>
@@ -135,9 +135,9 @@ export default function BoardPostForm({
           placeholder="내용"
           maxLength={MAX_BOARD_CONTENT_LENGTH}
           rows={6}
-          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-gray-500 resize-none placeholder:text-gray-400 dark:placeholder:text-gray-600"
+          className="w-full border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent resize-none placeholder:text-text-muted"
         />
-        <p className="text-right text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+        <p className="text-right text-xs text-text-muted mt-0.5">
           {content.length}/{MAX_BOARD_CONTENT_LENGTH}
         </p>
       </div>
@@ -146,14 +146,14 @@ export default function BoardPostForm({
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-700"
+          className="px-4 py-2 text-sm rounded-lg border border-border text-text-muted active:bg-surface"
         >
           취소
         </button>
         <button
           type="submit"
           disabled={!isValid || loading}
-          className="px-4 py-2 text-sm rounded-lg bg-black text-white disabled:opacity-40 active:bg-gray-800"
+          className="px-4 py-2 text-sm rounded-lg bg-accent text-accent-foreground disabled:opacity-40 active:opacity-80"
         >
           {loading ? '처리 중...' : submitLabel}
         </button>

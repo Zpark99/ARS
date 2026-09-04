@@ -1,9 +1,9 @@
 // components/ranking/RankingRow.tsx
 // 랭킹 한 줄: 순위 + 커버 + 제목/아티스트 + 별점. 탭 → /album/[mbid] (실제 데이터 라우트).
 
-import Image from "next/image";
 import Link from "next/link";
 import { RatingStars } from "@/components/ui/RatingStars";
+import AlbumCover from "@/components/AlbumCover";
 import type { PopularAlbum } from "@/types/album";
 
 type RankingRowProps = {
@@ -22,15 +22,7 @@ export function RankingRow({ album, rank }: RankingRowProps) {
       </span>
 
       <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-bg">
-        {album.cover_url ? (
-          <Image
-            src={album.cover_url}
-            alt={`${album.title} 커버`}
-            fill
-            className="object-cover"
-            sizes="56px"
-          />
-        ) : null}
+        <AlbumCover src={album.cover_url ?? null} alt={`${album.title} 커버`} />
       </div>
 
       <div className="min-w-0 flex-1">
