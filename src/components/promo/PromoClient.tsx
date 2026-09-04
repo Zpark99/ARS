@@ -10,14 +10,19 @@ import { PromoCard, type PromoCardData } from "@/components/cards/PromoCard";
 import { PromoWriteModal } from "./PromoWriteModal";
 
 export function PromoClient({
-  promos,
+  promos: initialPromos,
   isLoggedIn,
+  currentUserId,
+  artists,
 }: {
   promos: PromoCardData[];
   isLoggedIn: boolean;
+  currentUserId: string | null;
+  artists: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const [writeOpen, setWriteOpen] = useState(false);
+  const [promos, setPromos] = useState(initialPromos);
 
   const handleWriteClick = () => {
     if (isLoggedIn) setWriteOpen(true);
@@ -56,7 +61,14 @@ export function PromoClient({
         더 보기
       </Button>
 
-      {writeOpen ? <PromoWriteModal onClose={() => setWriteOpen(false)} /> : null}
+      {writeOpen && currentUserId ? (
+        <PromoWriteModal
+          currentUserId={currentUserId}
+          artists={artists}
+          onClose={() => setWriteOpen(false)}
+          onCreated={(promo) => setPromos((prev) => [promo, ...prev])}
+        />
+      ) : null}
     </div>
   );
 }

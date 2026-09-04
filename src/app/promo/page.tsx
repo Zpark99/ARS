@@ -29,14 +29,20 @@ export default async function PromoPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
-    .from("board_posts")
-    .select("id, title, like_count, created_at, artists(name)")
-    .eq("board_type", "promo")
-    .order("created_at", { ascending: false })
-    .limit(50);
+  const [{ data, error }, artistsResult] = await Promise.all([
+    supabase
+      .from("board_posts")
+      .select("id, title, like_count, created_at, artists(name)")
+      .eq("board_type", "promo")
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase.from("artists").select("id, name").order("name"),
+  ]);
   if (error) {
     console.error("promo posts fetch failed:", error);
+  }
+  if (artistsResult.error) {
+    console.error("promo artists fetch failed:", artistsResult.error);
   }
 
   const rows = (data ?? []) as unknown as PromoPostRow[];
@@ -67,5 +73,12 @@ export default async function PromoPage() {
     time: formatDate(p.created_at),
   }));
 
-  return <PromoClient promos={promos} isLoggedIn={!!user} />;
+  return (
+    <PromoClient
+      promos={promos}
+      isLoggedIn={!!user}
+      currentUserId={user?.id ?? null}
+      artists={artistsResult.data ?? []}
+    />
+  );
 }

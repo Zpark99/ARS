@@ -1,63 +1,92 @@
 // components/promo/PromoWriteModal.tsx
-// 컴포넌트스펙_5_갤러리홍보 - 홍보글쓰기 폼(레이아웃). 팀 검색형 선택·실제 등록은 #88에서 연결 — 지금은 더미 제출.
+// 컴포넌트스펙_5_갤러리홍보 - 홍보글쓰기 폼. board_posts(board_type='promo') 실제 INSERT.
+// artist/album 선택은 BoardPostForm(artists 분기)의 기존 검색 부품을 재사용 —
+// 새 폼 컴포넌트를 만들지 않음(#114).
 
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import BoardPostForm, { type PromoSelection } from "@/components/board/BoardPostForm";
+import type { PromoCardData } from "@/components/cards/PromoCard";
 
-export function PromoWriteModal({ onClose }: { onClose: () => void }) {
-  const [title, setTitle] = useState("");
-  const [team, setTeam] = useState("");
-  const [content, setContent] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("ko-KR", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !content.trim()) return;
-    // TODO(#88): board_posts(board_type='promo') insert + 팀 검색형 선택 연결
-    setSubmitted(true);
+type InsertedPromoRow = {
+  id: string;
+  title: string;
+  like_count: number;
+  created_at: string;
+  artists: { name: string } | null;
+};
+
+export function PromoWriteModal({
+  currentUserId,
+  artists,
+  onClose,
+  onCreated,
+}: {
+  currentUserId: string;
+  artists: { id: string; name: string }[];
+  onClose: () => void;
+  onCreated: (promo: PromoCardData) => void;
+}) {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleSubmit = async (title: string, content: string, promo?: PromoSelection) => {
+    if (!promo?.artistId || !promo?.albumId) {
+      setSubmitError("팀과 앨범을 검색해서 선택해야 등록할 수 있어요.");
+      return;
+    }
+    setSubmitError(null);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("board_posts")
+      .insert({
+        board_type: "promo",
+        user_id: currentUserId,
+        title,
+        content,
+        artist_id: promo.artistId,
+        album_id: promo.albumId,
+      })
+      .select("id, title, like_count, created_at, artists(name)")
+      .single();
+    if (error || !data) {
+      setSubmitError(error?.message ?? "등록에 실패했어요. 다시 시도해주세요.");
+      return;
+    }
+    const row = data as unknown as InsertedPromoRow;
+    onCreated({
+      id: row.id,
+      title: row.title,
+      team: row.artists?.name ?? null,
+      thumbnailUrl: null,
+      likeCount: row.like_count,
+      commentCount: 0,
+      time: formatDate(row.created_at),
+    });
+    onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div className="fixed inset-0 bg-bg/80" onClick={onClose} aria-hidden="true" />
       <div className="relative z-10 w-full max-w-sm rounded-md border border-border bg-surface p-5">
-        {submitted ? (
-          <div className="flex flex-col items-center gap-3 py-4 text-center">
-            <p className="text-body text-text">홍보글이 등록됐어요.</p>
-            <Button onClick={onClose}>닫기</Button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <h2 className="text-subtitle font-semibold text-text">홍보글쓰기</h2>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="제목 (필수)"
-              required
-            />
-            <Input
-              value={team}
-              onChange={(e) => setTeam(e.target.value)}
-              placeholder="팀 검색 (선택)"
-            />
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="내용 (필수)"
-              rows={5}
-              className="w-full rounded-md border border-border bg-surface px-3 py-2 text-body text-text placeholder:text-text-muted focus:outline-none focus:border-accent"
-            />
-            <div className="mt-2 flex justify-end gap-2">
-              <Button type="button" variant="ghost" onClick={onClose}>
-                취소
-              </Button>
-              <Button type="submit">등록</Button>
-            </div>
-          </form>
-        )}
+        <h2 className="mb-3 text-subtitle font-semibold text-text">홍보글쓰기</h2>
+        <BoardPostForm
+          onSubmit={handleSubmit}
+          onCancel={onClose}
+          submitLabel="등록"
+          artists={artists}
+        />
+        {submitError && <p className="mt-2 text-xs text-red-500">{submitError}</p>}
       </div>
     </div>
   );

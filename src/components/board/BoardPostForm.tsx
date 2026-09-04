@@ -59,7 +59,10 @@ export default function BoardPostForm({
     }
   }, [selectedArtist])
 
-  const isValid = isValidBoardTitle(title) && isValidBoardContent(content)
+  const isValid =
+    isValidBoardTitle(title) &&
+    isValidBoardContent(content) &&
+    (!artists || (!!selectedArtist && !!selectedAlbum))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -81,37 +84,44 @@ export default function BoardPostForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       {artists && (
-        <div className="flex gap-2">
-          <input
-            type="text"
-            list="promo-artist-options"
-            value={artistInput}
-            onChange={(e) => setArtistInput(e.target.value)}
-            placeholder="팀 검색 (선택)"
-            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
-          />
-          <datalist id="promo-artist-options">
-            {artists.map((a) => (
-              <option key={a.id} value={a.name} />
-            ))}
-          </datalist>
-          {selectedArtist && (
-            <>
-              <input
-                type="text"
-                list="promo-album-options"
-                value={albumInput}
-                onChange={(e) => setAlbumInput(e.target.value)}
-                placeholder="앨범 검색 (선택)"
-                className="flex-1 border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
-              />
-              <datalist id="promo-album-options">
-                {albums.map((al) => (
-                  <option key={al.id} value={al.title} />
-                ))}
-              </datalist>
-            </>
-          )}
+        <div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              list="promo-artist-options"
+              value={artistInput}
+              onChange={(e) => setArtistInput(e.target.value)}
+              placeholder="팀 검색 (필수)"
+              className="flex-1 border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
+            />
+            <datalist id="promo-artist-options">
+              {artists.map((a) => (
+                <option key={a.id} value={a.name} />
+              ))}
+            </datalist>
+            {selectedArtist && (
+              <>
+                <input
+                  type="text"
+                  list="promo-album-options"
+                  value={albumInput}
+                  onChange={(e) => setAlbumInput(e.target.value)}
+                  placeholder="앨범 검색 (필수)"
+                  className="flex-1 border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
+                />
+                <datalist id="promo-album-options">
+                  {albums.map((al) => (
+                    <option key={al.id} value={al.title} />
+                  ))}
+                </datalist>
+              </>
+            )}
+          </div>
+          {!selectedArtist || !selectedAlbum ? (
+            <p className="text-xs text-text-muted mt-1">
+              목록에 있는 팀과 앨범을 정확히 검색해서 선택해야 등록할 수 있어요.
+            </p>
+          ) : null}
         </div>
       )}
       <div>
