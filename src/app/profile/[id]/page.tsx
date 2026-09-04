@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
+import { isValidUUID } from '@/lib/validation/like'
 import FollowButton from '@/components/profile/FollowButton'
 import UserAlbumList from '@/components/profile/UserAlbumList'
 import MyCommentsSection, { type MyComment } from '@/components/mypage/MyCommentsSection'
@@ -20,6 +21,13 @@ export default async function ProfilePage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
+
+  // 더미/가짜 라우팅 식별자가 라이브까지 새는 걸 막는 가드 (#109, mbid-1류 재발 3회 방지)
+  if (!isValidUUID(id)) {
+    console.error(`invalid profile id format: ${id} (path: /profile/${id})`)
+    notFound()
+  }
+
   const supabase = await createClient()
 
   // 1. 프로필 + 로그인 유저 병렬 조회

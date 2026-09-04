@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { AlbumHubClient } from '@/components/album/AlbumHubClient'
 import { createClient } from '@/lib/supabase/server'
+import { isValidUUID } from '@/lib/validation/like'
 import type { AlbumRow, CommentRow } from '@/types/album'
 import type { PromoCardData } from '@/components/cards/PromoCard'
 import type { GalleryRowData, GalleryPostFlag } from '@/components/cards/GalleryRow'
@@ -78,6 +79,16 @@ export default async function AlbumPage({
   params: Promise<{ mbid: string }>
 }) {
   const { mbid } = await params
+
+  // 더미/가짜 라우팅 식별자가 라이브까지 새는 걸 막는 가드 (#109, mbid-1류 재발 3회 방지)
+  // MusicBrainz mbid도 UUID 형식이라 이 검증으로 커버됨.
+  // ponytail: CI/pre-commit lint 스크립트는 생략 — 전수 점검 결과 위반 0건이라 지금은
+  // 과설계. 이 런타임 가드로 재발은 이미 막히고, 실제로 또 새면 그때 스크립트 추가.
+  if (!isValidUUID(mbid)) {
+    console.error(`invalid album mbid format: ${mbid} (path: /album/${mbid})`)
+    notFound()
+  }
+
   const supabase = await createClient()
 
   // 1. 검색 시 캐싱된 앨범 우선 조회
