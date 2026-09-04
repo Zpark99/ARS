@@ -47,7 +47,7 @@ export default function BoardPostLikeButton({ postId, currentUserId }: BoardPost
       className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
         liked
           ? 'border-accent bg-accent text-accent-foreground'
-          : 'border-gray-200 text-gray-500 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-500'
+          : 'border-border text-text-muted hover:border-text-muted'
       }`}
     >
       <svg

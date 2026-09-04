@@ -62,27 +62,27 @@ export default function SearchInterface() {
 
   return (
     <div className="flex flex-col flex-1">
-      <div className="sticky top-14 z-10 bg-white dark:bg-gray-900 px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+      <div className="sticky top-14 z-10 bg-bg px-4 py-3 border-b border-border">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="원하는 검색어를 입력하세요"
-          className="w-full px-4 py-2.5 rounded-full border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors bg-white dark:bg-gray-800"
+          className="w-full px-4 py-2.5 rounded-full border border-border text-sm text-text placeholder:text-text-muted outline-none focus:border-accent transition-colors bg-surface"
           autoComplete="off"
         />
       </div>
 
       <main className="flex-1">
         {effectiveStatus === 'idle' && (
-          <p className="text-center text-sm text-gray-400 dark:text-gray-500 mt-16 px-4">
+          <p className="text-center text-sm text-text-muted mt-16 px-4">
             검색어를 입력하면 앨범을 찾아드려요
           </p>
         )}
 
         {effectiveStatus === 'loading' && (
           <div className="flex justify-center mt-16">
-            <div className="w-6 h-6 border-2 border-gray-200 dark:border-gray-700 border-t-black dark:border-t-white rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-border border-t-accent rounded-full animate-spin" />
           </div>
         )}
 
@@ -91,13 +91,13 @@ export default function SearchInterface() {
         )}
 
         {effectiveStatus === 'done' && effectiveResults.length === 0 && (
-          <p className="text-center text-sm text-gray-400 dark:text-gray-500 mt-16 px-4">
+          <p className="text-center text-sm text-text-muted mt-16 px-4">
             &ldquo;{trimmedQuery}&rdquo; 검색 결과가 없습니다
           </p>
         )}
 
         {effectiveStatus === 'done' && effectiveResults.length > 0 && (
-          <ul className="divide-y divide-gray-50 dark:divide-gray-800">
+          <ul className="divide-y divide-border">
             {effectiveResults.map((album) => (
               <li key={album.mbid}>
                 <AlbumCard album={album} />
