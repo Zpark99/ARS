@@ -45,8 +45,12 @@ export default function BoardPostForm({
   // 타이핑한 텍스트가 목록의 이름과 정확히 일치할 때만 실제 선택으로 간주 (안 골라도 됨)
   const selectedArtist = artists?.find((a) => a.name === artistInput)
   const selectedAlbum = albums.find((al) => al.title === albumInput)
-  // artists 목록에 없는 팀은 수기 입력, 앨범은 검색형에서만(연결 안 해도 됨) 선택
+  // artists 목록에 없는 팀은 수기 입력
   const hasArtist = artistMode === 'search' ? !!selectedArtist : artistManualText.trim().length > 0
+  // 앨범 검색은 팀 이름(검색형은 선택된 artist, 수기형은 입력한 텍스트)만 있으면 두 모드 다 가능.
+  // artists 테이블에 없는 팀(#101 매칭 갭)도 albums.artist_name이 일치하면 앨범을 연결할 수 있어야
+  // 홍보 탭 연동이 된다 — artist_id가 없다고 앨범 연결까지 막으면 안 됨(#116 후속).
+  const albumSearchName = artistMode === 'search' ? selectedArtist?.name : (hasArtist ? artistManualText.trim() : undefined)
 
   const switchArtistMode = (mode: 'search' | 'manual') => {
     setArtistMode(mode)
@@ -57,20 +61,29 @@ export default function BoardPostForm({
   }
 
   useEffect(() => {
-    if (!selectedArtist) return
+    if (!albumSearchName) {
+      setAlbums([])
+      setAlbumInput('')
+      return
+    }
     let cancelled = false
-    createClient()
-      .from('albums')
-      .select('id, title')
-      .eq('artist_name', selectedArtist.name)
-      .order('title')
-      .then(({ data }) => {
-        if (!cancelled) setAlbums(data ?? [])
-      })
+    // 수기 입력은 타이핑마다 바뀌니 살짝 디바운스, 검색형은 선택 즉시 확정된 값이라 바로 조회.
+    const delay = artistMode === 'manual' ? 400 : 0
+    const timer = setTimeout(() => {
+      createClient()
+        .from('albums')
+        .select('id, title')
+        .eq('artist_name', albumSearchName)
+        .order('title')
+        .then(({ data }) => {
+          if (!cancelled) setAlbums(data ?? [])
+        })
+    }, delay)
     return () => {
       cancelled = true
+      clearTimeout(timer)
     }
-  }, [selectedArtist])
+  }, [albumSearchName, artistMode])
 
   const isValid =
     isValidBoardTitle(title) && isValidBoardContent(content) && (!artists || hasArtist)
@@ -86,7 +99,7 @@ export default function BoardPostForm({
         artists
           ? artistMode === 'search'
             ? { artistId: selectedArtist?.id, albumId: selectedAlbum?.id }
-            : { artistNameText: artistManualText.trim() }
+            : { artistNameText: artistManualText.trim(), albumId: selectedAlbum?.id }
           : undefined
       )
     } finally {
@@ -149,13 +162,32 @@ export default function BoardPostForm({
               )}
             </div>
           ) : (
-            <input
-              type="text"
-              value={artistManualText}
-              onChange={(e) => setArtistManualText(e.target.value)}
-              placeholder="팀 이름 직접 입력 (필수)"
-              className="w-full border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={artistManualText}
+                onChange={(e) => setArtistManualText(e.target.value)}
+                placeholder="팀 이름 직접 입력 (필수)"
+                className="flex-1 border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
+              />
+              {hasArtist && (
+                <>
+                  <input
+                    type="text"
+                    list="promo-album-options"
+                    value={albumInput}
+                    onChange={(e) => setAlbumInput(e.target.value)}
+                    placeholder="앨범 검색 (선택)"
+                    className="flex-1 border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
+                  />
+                  <datalist id="promo-album-options">
+                    {albums.map((al) => (
+                      <option key={al.id} value={al.title} />
+                    ))}
+                  </datalist>
+                </>
+              )}
+            </div>
           )}
 
           {!hasArtist && (

@@ -18,7 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/archive", label: "아카이브" },
   { href: "/gallery", label: "갤러리" },
   { href: "/promo", label: "홍보" },
-  { href: "/qa", label: "Q&A" },
+  { href: "/qa", label: "QA" },
   { href: "/updates", label: "업데이트" },
 ];
 

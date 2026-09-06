@@ -163,7 +163,7 @@ async function getGalleryHotPosts(
 ): Promise<GalleryRowData[]> {
   const { data, error } = await supabase
     .from("gallery_posts")
-    .select("id, title, user_id, created_at, post_flag")
+    .select("id, title, user_id, artist_id, created_at, post_flag")
     .order("created_at", { ascending: false })
     .limit(5);
   if (error) console.error("home gallery hot posts fetch failed:", error);
@@ -175,6 +175,7 @@ async function getGalleryHotPosts(
     likeCount: 0, // gallery_posts는 아직 좋아요 스키마 없음 (#104 백로그)
     time: formatDate(p.created_at),
     flag: p.post_flag,
+    artistId: p.artist_id,
   }));
 }
 

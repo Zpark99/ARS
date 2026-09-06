@@ -13,7 +13,11 @@ export function GalleryHotSection({ posts }: { posts: GalleryRowData[] }) {
       ) : (
         <div className="rounded-md border border-border bg-surface px-3">
           {posts.map((post) => (
-            <GalleryRow key={post.id} post={post} href="/gallery" />
+            <GalleryRow
+              key={post.id}
+              post={post}
+              href={post.artistId ? `/gallery/${post.artistId}#gallery-post-${post.id}` : "/gallery"}
+            />
           ))}
         </div>
       )}
