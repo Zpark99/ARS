@@ -21,6 +21,7 @@ type PromoPostRow = {
   like_count: number;
   created_at: string;
   artists: { name: string } | null;
+  artist_name_text: string | null;
 };
 
 export default async function PromoPage() {
@@ -29,14 +30,20 @@ export default async function PromoPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
-    .from("board_posts")
-    .select("id, title, like_count, created_at, artists(name)")
-    .eq("board_type", "promo")
-    .order("created_at", { ascending: false })
-    .limit(50);
+  const [{ data, error }, artistsResult] = await Promise.all([
+    supabase
+      .from("board_posts")
+      .select("id, title, like_count, created_at, artists(name), artist_name_text")
+      .eq("board_type", "promo")
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase.from("artists").select("id, name").order("name"),
+  ]);
   if (error) {
     console.error("promo posts fetch failed:", error);
+  }
+  if (artistsResult.error) {
+    console.error("promo artists fetch failed:", artistsResult.error);
   }
 
   const rows = (data ?? []) as unknown as PromoPostRow[];
@@ -60,12 +67,19 @@ export default async function PromoPage() {
   const promos: PromoCardData[] = rows.map((p) => ({
     id: p.id,
     title: p.title,
-    team: p.artists?.name ?? null,
+    team: p.artists?.name ?? p.artist_name_text ?? null,
     thumbnailUrl: null,
     likeCount: p.like_count,
     commentCount: commentCounts[p.id] ?? 0,
     time: formatDate(p.created_at),
   }));
 
-  return <PromoClient promos={promos} isLoggedIn={!!user} />;
+  return (
+    <PromoClient
+      promos={promos}
+      isLoggedIn={!!user}
+      currentUserId={user?.id ?? null}
+      artists={artistsResult.data ?? []}
+    />
+  );
 }

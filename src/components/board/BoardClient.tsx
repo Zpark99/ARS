@@ -29,11 +29,17 @@ export default function BoardClient({
 }: BoardClientProps) {
   const [posts, setPosts] = useState<BoardPost[]>(initialPosts)
   const [isWriting, setIsWriting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const supabase = useMemo(() => createClient(), [])
 
   const handleCreate = async (title: string, content: string, promo?: PromoSelection) => {
     if (!currentUserId || !isValidBoardTitle(title) || !isValidBoardContent(content)) return
+    if (boardType === 'promo' && !promo?.artistId && !promo?.artistNameText) {
+      setSubmitError('팀 정보가 필요해요. 검색해서 선택하거나 직접 입력해주세요.')
+      return
+    }
+    setSubmitError(null)
     const { data, error } = await supabase
       .from('board_posts')
       .insert({
@@ -42,11 +48,15 @@ export default function BoardClient({
         title,
         content,
         artist_id: promo?.artistId ?? null,
+        artist_name_text: promo?.artistNameText ?? null,
         album_id: promo?.albumId ?? null,
       })
       .select()
       .single()
-    if (error || !data) return
+    if (error || !data) {
+      setSubmitError(error?.message ?? '등록에 실패했어요. 다시 시도해주세요.')
+      return
+    }
     setPosts((prev) => [data as BoardPost, ...prev])
     setIsWriting(false)
   }
@@ -81,7 +91,10 @@ export default function BoardClient({
         <h1 className="text-base font-bold text-text">{boardLabel}</h1>
         {currentUserId ? (
           <button
-            onClick={() => setIsWriting((prev) => !prev)}
+            onClick={() => {
+              setIsWriting((prev) => !prev)
+              setSubmitError(null)
+            }}
             className="text-xs bg-accent text-accent-foreground px-3 py-1.5 rounded-full active:opacity-80"
           >
             {isWriting ? '취소' : '글쓰기'}
@@ -105,6 +118,7 @@ export default function BoardClient({
             submitLabel="작성"
             artists={artists}
           />
+          {submitError && <p className="text-xs text-red-500 mt-2">{submitError}</p>}
         </div>
       )}
 

@@ -14,6 +14,9 @@ export type GalleryRowData = {
   time: string;
   flag?: GalleryPostFlag;
   visited?: boolean;
+  // 홈 갤러리 핫글처럼 팀 갤러리 밖에서 노출될 때, 그 글이 있는 /gallery/[artistId]로
+  // 이동시키기 위한 값. 팀 갤러리 안에서 자체 렌더할 때는 필요 없음(#117).
+  artistId?: string;
 };
 
 const FLAG_LABEL: Record<Exclude<GalleryPostFlag, "normal">, string> = {
@@ -27,6 +30,7 @@ export function GalleryRow({ post, href }: { post: GalleryRowData; href: string 
   return (
     <Link
       href={href}
+      id={`gallery-post-${post.id}`}
       className="flex items-center gap-2 border-b border-border py-2.5 last:border-b-0"
     >
       {flag && flag !== "normal" ? (

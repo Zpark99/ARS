@@ -70,8 +70,10 @@ export default async function TeamGalleryPage({
   return (
     <TeamGalleryClient
       teamName={artistResult.data.name}
+      artistId={artistId}
       posts={posts}
       isLoggedIn={!!authResult.data.user}
+      currentUserId={authResult.data.user?.id ?? null}
     />
   );
 }

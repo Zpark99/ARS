@@ -15,7 +15,7 @@ interface UserAlbumListProps {
 }
 
 // 마이페이지 등에서도 재사용 가능한 유저 활동 앨범 목록 (평가한 앨범 / 좋아요한 앨범 공용)
-export default function UserAlbumList({ title, items, emptyText, rightMark }: UserAlbumListProps) {
+export default function UserAlbumList({ title, items, emptyText, rightMark }: Readonly<UserAlbumListProps>) {
   return (
     <section className="pt-5 pb-2 px-4 border-b border-border last:border-b-0">
       <h2 className="text-sm font-semibold text-text-muted mb-3">{title}</h2>

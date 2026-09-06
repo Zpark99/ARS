@@ -20,7 +20,7 @@ const TABS: TabItem[] = [
 // 더보기 시트에 담기는 항목. 라우트는 GlobalHeader와 동일하게 통일.
 const MORE_ITEMS_BASE = [
   { href: "/gallery", label: "갤러리" },
-  { href: "/qa", label: "Q&A" },
+  { href: "/qa", label: "QA" },
   { href: "/updates", label: "업데이트" },
 ];
 

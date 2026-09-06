@@ -163,7 +163,7 @@ async function getGalleryHotPosts(
 ): Promise<GalleryRowData[]> {
   const { data, error } = await supabase
     .from("gallery_posts")
-    .select("id, title, user_id, created_at, post_flag")
+    .select("id, title, user_id, artist_id, created_at, post_flag")
     .order("created_at", { ascending: false })
     .limit(5);
   if (error) console.error("home gallery hot posts fetch failed:", error);
@@ -175,6 +175,7 @@ async function getGalleryHotPosts(
     likeCount: 0, // gallery_posts는 아직 좋아요 스키마 없음 (#104 백로그)
     time: formatDate(p.created_at),
     flag: p.post_flag,
+    artistId: p.artist_id,
   }));
 }
 
@@ -183,13 +184,20 @@ async function getHomePromos(
 ): Promise<PromoCardData[]> {
   const { data, error } = await supabase
     .from("board_posts")
-    .select("id, title, like_count, created_at, artists(name)")
+    .select("id, title, like_count, created_at, artists(name), artist_name_text")
     .eq("board_type", "promo")
     .order("created_at", { ascending: false })
     .limit(5);
   if (error) console.error("home promos fetch failed:", error);
 
-  type Row = { id: string; title: string; like_count: number; created_at: string; artists: { name: string } | null };
+  type Row = {
+    id: string;
+    title: string;
+    like_count: number;
+    created_at: string;
+    artists: { name: string } | null;
+    artist_name_text: string | null;
+  };
   const rows = (data ?? []) as unknown as Row[];
   const postIds = rows.map((p) => p.id);
 
@@ -208,7 +216,7 @@ async function getHomePromos(
   return rows.map((p) => ({
     id: p.id,
     title: p.title,
-    team: p.artists?.name ?? null,
+    team: p.artists?.name ?? p.artist_name_text ?? null,
     thumbnailUrl: null,
     likeCount: p.like_count,
     commentCount: commentCounts[p.id] ?? 0,
