@@ -21,6 +21,7 @@ type PromoPostRow = {
   like_count: number;
   created_at: string;
   artists: { name: string } | null;
+  artist_name_text: string | null;
 };
 
 export default async function PromoPage() {
@@ -32,7 +33,7 @@ export default async function PromoPage() {
   const [{ data, error }, artistsResult] = await Promise.all([
     supabase
       .from("board_posts")
-      .select("id, title, like_count, created_at, artists(name)")
+      .select("id, title, like_count, created_at, artists(name), artist_name_text")
       .eq("board_type", "promo")
       .order("created_at", { ascending: false })
       .limit(50),
@@ -66,7 +67,7 @@ export default async function PromoPage() {
   const promos: PromoCardData[] = rows.map((p) => ({
     id: p.id,
     title: p.title,
-    team: p.artists?.name ?? null,
+    team: p.artists?.name ?? p.artist_name_text ?? null,
     thumbnailUrl: null,
     likeCount: p.like_count,
     commentCount: commentCounts[p.id] ?? 0,

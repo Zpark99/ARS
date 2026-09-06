@@ -183,13 +183,20 @@ async function getHomePromos(
 ): Promise<PromoCardData[]> {
   const { data, error } = await supabase
     .from("board_posts")
-    .select("id, title, like_count, created_at, artists(name)")
+    .select("id, title, like_count, created_at, artists(name), artist_name_text")
     .eq("board_type", "promo")
     .order("created_at", { ascending: false })
     .limit(5);
   if (error) console.error("home promos fetch failed:", error);
 
-  type Row = { id: string; title: string; like_count: number; created_at: string; artists: { name: string } | null };
+  type Row = {
+    id: string;
+    title: string;
+    like_count: number;
+    created_at: string;
+    artists: { name: string } | null;
+    artist_name_text: string | null;
+  };
   const rows = (data ?? []) as unknown as Row[];
   const postIds = rows.map((p) => p.id);
 
@@ -208,7 +215,7 @@ async function getHomePromos(
   return rows.map((p) => ({
     id: p.id,
     title: p.title,
-    team: p.artists?.name ?? null,
+    team: p.artists?.name ?? p.artist_name_text ?? null,
     thumbnailUrl: null,
     likeCount: p.like_count,
     commentCount: commentCounts[p.id] ?? 0,

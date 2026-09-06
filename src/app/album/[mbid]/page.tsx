@@ -159,7 +159,7 @@ export default async function AlbumPage({
   const [promoResult, artistResult] = await Promise.all([
     supabase
       .from('board_posts')
-      .select('id, title, like_count, created_at, artists(name)')
+      .select('id, title, like_count, created_at, artists(name), artist_name_text')
       .eq('board_type', 'promo')
       .eq('album_id', album.id)
       .order('created_at', { ascending: false })
@@ -176,6 +176,7 @@ export default async function AlbumPage({
     like_count: number
     created_at: string
     artists: { name: string } | null
+    artist_name_text: string | null
   }
   const promoRows = (promoResult.data ?? []) as unknown as PromoPostRow[]
   const promoIds = promoRows.map((p) => p.id)
@@ -198,7 +199,7 @@ export default async function AlbumPage({
   const promos: PromoCardData[] = promoRows.map((p) => ({
     id: p.id,
     title: p.title,
-    team: p.artists?.name ?? null,
+    team: p.artists?.name ?? p.artist_name_text ?? null,
     thumbnailUrl: null,
     likeCount: p.like_count,
     commentCount: commentCounts[p.id] ?? 0,

@@ -35,8 +35,8 @@ export default function BoardClient({
 
   const handleCreate = async (title: string, content: string, promo?: PromoSelection) => {
     if (!currentUserId || !isValidBoardTitle(title) || !isValidBoardContent(content)) return
-    if (boardType === 'promo' && (!promo?.artistId || !promo?.albumId)) {
-      setSubmitError('팀과 앨범을 검색해서 선택해야 등록할 수 있어요.')
+    if (boardType === 'promo' && !promo?.artistId && !promo?.artistNameText) {
+      setSubmitError('팀 정보가 필요해요. 검색해서 선택하거나 직접 입력해주세요.')
       return
     }
     setSubmitError(null)
@@ -48,6 +48,7 @@ export default function BoardClient({
         title,
         content,
         artist_id: promo?.artistId ?? null,
+        artist_name_text: promo?.artistNameText ?? null,
         album_id: promo?.albumId ?? null,
       })
       .select()

@@ -24,6 +24,7 @@ type InsertedPromoRow = {
   like_count: number;
   created_at: string;
   artists: { name: string } | null;
+  artist_name_text: string | null;
 };
 
 export function PromoWriteModal({
@@ -40,8 +41,8 @@ export function PromoWriteModal({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleSubmit = async (title: string, content: string, promo?: PromoSelection) => {
-    if (!promo?.artistId || !promo?.albumId) {
-      setSubmitError("팀과 앨범을 검색해서 선택해야 등록할 수 있어요.");
+    if (!promo?.artistId && !promo?.artistNameText) {
+      setSubmitError("팀 정보가 필요해요. 검색해서 선택하거나 직접 입력해주세요.");
       return;
     }
     setSubmitError(null);
@@ -53,10 +54,11 @@ export function PromoWriteModal({
         user_id: currentUserId,
         title,
         content,
-        artist_id: promo.artistId,
-        album_id: promo.albumId,
+        artist_id: promo.artistId ?? null,
+        artist_name_text: promo.artistNameText ?? null,
+        album_id: promo.albumId ?? null,
       })
-      .select("id, title, like_count, created_at, artists(name)")
+      .select("id, title, like_count, created_at, artists(name), artist_name_text")
       .single();
     if (error || !data) {
       setSubmitError(error?.message ?? "등록에 실패했어요. 다시 시도해주세요.");
@@ -66,7 +68,7 @@ export function PromoWriteModal({
     onCreated({
       id: row.id,
       title: row.title,
-      team: row.artists?.name ?? null,
+      team: row.artists?.name ?? row.artist_name_text ?? null,
       thumbnailUrl: null,
       likeCount: row.like_count,
       commentCount: 0,
