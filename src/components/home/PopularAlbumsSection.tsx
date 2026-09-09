@@ -8,15 +8,15 @@ interface Props {
 export default function PopularAlbumsSection({ albums }: Props) {
   return (
     <section>
-      <h2 className="text-lg font-bold px-4 mb-3 text-gray-900 dark:text-gray-100">인기 앨범</h2>
+      <h2 className="text-lg font-bold px-4 mb-3 text-text">인기 앨범</h2>
       {albums.length === 0 ? (
-        <p className="px-4 text-sm text-gray-400 dark:text-gray-500">아직 평가된 앨범이 없어요.</p>
+        <p className="px-4 text-sm text-text-muted">아직 평가된 앨범이 없어요.</p>
       ) : (
         <div className="flex overflow-x-auto gap-2 px-4 pb-3 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {albums.map((album) => (
             <div
               key={album.mbid}
-              className="flex-shrink-0 w-[280px] snap-start rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden"
+              className="flex-shrink-0 w-[280px] snap-start rounded-xl border border-border overflow-hidden"
             >
               <AlbumCard
                 album={{

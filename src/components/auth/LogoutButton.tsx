@@ -31,7 +31,7 @@ export default function LogoutButton({ className }: LogoutButtonProps) {
       disabled={isLoading}
       className={
         className ??
-        'text-sm text-gray-500 hover:text-gray-700 active:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+        'text-sm text-text-muted hover:text-text active:text-text transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
       }
     >
       {isLoading ? '로그아웃 중...' : '로그아웃'}

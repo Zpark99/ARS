@@ -2,13 +2,13 @@
 // board_posts 테이블의 board_type/title/content CHECK 제약과 동일한 규칙을
 // DB 호출 전에 앱 레벨에서 먼저 검증.
 
-export type BoardType = "qa" | "updates";
+export type BoardType = "qa" | "updates" | "promo";
 
 export const MAX_BOARD_TITLE_LENGTH = 100;
 export const MAX_BOARD_CONTENT_LENGTH = 2000;
 
 export function isValidBoardType(value: unknown): value is BoardType {
-  return value === "qa" || value === "updates";
+  return value === "qa" || value === "updates" || value === "promo";
 }
 
 export function isValidBoardTitle(value: unknown): value is string {

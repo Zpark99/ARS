@@ -62,8 +62,8 @@ export default function FollowButton({
       disabled={loading}
       className={`rounded-full px-5 py-1.5 text-sm font-semibold transition-colors disabled:opacity-50 active:scale-95 ${
         following
-          ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-          : 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200'
+          ? 'bg-surface text-text-muted hover:bg-surface-raised'
+          : 'bg-accent text-accent-foreground hover:opacity-90'
       }`}
     >
       {loading ? '...' : following ? '팔로잉' : '팔로우'}

@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code scratch (CLAUDE.md 4단계 임시 커밋 메시지용)
+/scratchpad/

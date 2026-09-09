@@ -12,6 +12,7 @@ export interface MyGalleryPost {
 
 interface Props {
   posts: MyGalleryPost[]
+  title?: string
 }
 
 function formatDate(iso: string) {
@@ -20,7 +21,7 @@ function formatDate(iso: string) {
   return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`
 }
 
-export default function MyGalleryPostsSection({ posts }: Props) {
+export default function MyGalleryPostsSection({ posts, title = '내 갤러리 글' }: Props) {
   const [open, setOpen] = useState(true)
 
   return (
@@ -29,7 +30,7 @@ export default function MyGalleryPostsSection({ posts }: Props) {
         onClick={() => setOpen((prev) => !prev)}
         className="w-full flex items-center justify-between px-4 py-2 text-left"
       >
-        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">내 갤러리 글</h2>
+        <h2 className="text-sm font-semibold text-text-muted">{title}</h2>
         <svg
           width="16"
           height="16"
@@ -39,26 +40,26 @@ export default function MyGalleryPostsSection({ posts }: Props) {
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : 'rotate-0'}`}
+          className={`text-text-muted transition-transform duration-200 ${open ? 'rotate-180' : 'rotate-0'}`}
         >
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
       {open && (
         posts.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-gray-400 dark:text-gray-500 text-center">아직 작성한 갤러리 글이 없어요.</p>
+          <p className="px-4 py-6 text-sm text-text-muted text-center">아직 작성한 갤러리 글이 없어요.</p>
         ) : (
-          <ul className="divide-y divide-gray-100 dark:divide-gray-800">
+          <ul className="divide-y divide-border">
             {posts.map((p) => (
               <li key={p.id}>
                 <Link
                   href={`/gallery/${encodeURIComponent(p.artist_name)}`}
-                  className="flex flex-col px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-800"
+                  className="flex flex-col px-4 py-3 hover:bg-surface active:bg-surface"
                 >
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">
+                  <p className="text-xs text-text-muted mb-0.5">
                     {p.artist_name} 갤러리 · {formatDate(p.created_at)}
                   </p>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{p.title}</p>
+                  <p className="text-sm font-medium text-text truncate">{p.title}</p>
                 </Link>
               </li>
             ))}

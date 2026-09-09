@@ -1,10 +1,18 @@
 import { notFound } from 'next/navigation'
-import AlbumCover from '@/components/AlbumCover'
-import RatingSection from '@/components/RatingSection'
-import CommentSection from '@/components/CommentSection'
-import AlbumLikeButton from '@/components/AlbumLikeButton'
+import { AlbumHubClient } from '@/components/album/AlbumHubClient'
 import { createClient } from '@/lib/supabase/server'
+import { isValidUUID } from '@/lib/validation/like'
 import type { AlbumRow, CommentRow } from '@/types/album'
+import type { PromoCardData } from '@/components/cards/PromoCard'
+import type { GalleryRowData, GalleryPostFlag } from '@/components/cards/GalleryRow'
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
 
 const MB_BASE = 'https://musicbrainz.org/ws/2'
 const CAA_BASE = 'https://coverartarchive.org/release'
@@ -71,6 +79,16 @@ export default async function AlbumPage({
   params: Promise<{ mbid: string }>
 }) {
   const { mbid } = await params
+
+  // 더미/가짜 라우팅 식별자가 라이브까지 새는 걸 막는 가드 (#109, mbid-1류 재발 3회 방지)
+  // MusicBrainz mbid도 UUID 형식이라 이 검증으로 커버됨.
+  // ponytail: CI/pre-commit lint 스크립트는 생략 — 전수 점검 결과 위반 0건이라 지금은
+  // 과설계. 이 런타임 가드로 재발은 이미 막히고, 실제로 또 새면 그때 스크립트 추가.
+  if (!isValidUUID(mbid)) {
+    console.error(`invalid album mbid format: ${mbid} (path: /album/${mbid})`)
+    notFound()
+  }
+
   const supabase = await createClient()
 
   // 1. 검색 시 캐싱된 앨범 우선 조회
@@ -135,50 +153,107 @@ export default async function AlbumPage({
     }
   }
 
+  // 7. 홍보 탭: board_posts WHERE board_type='promo' AND album_id=album.id (#100 인덱스 사용)
+  //    갤러리 탭: album_id 컬럼 없음 → artists.name = album.artist_name으로 artist_id를 찾아
+  //    gallery_posts를 필터 (#100 결정). 매칭 실패 시 빈 배열 = 빈 상태(에러 아님, #101은 별도 이슈).
+  const [promoResult, artistResult] = await Promise.all([
+    supabase
+      .from('board_posts')
+      .select('id, title, like_count, created_at, artists(name), artist_name_text')
+      .eq('board_type', 'promo')
+      .eq('album_id', album.id)
+      .order('created_at', { ascending: false })
+      .limit(20),
+    supabase.from('artists').select('id').eq('name', album.artist_name).maybeSingle(),
+  ])
+
+  // PostgREST는 FK 방향(board_posts.artist_id → artists.id, to-one)에서 배열이 아니라
+  // 단일 객체로 embed를 반환한다 (실제 REST 응답으로 확인, supabase-js 기본 타입 추론은
+  // Database 제네릭이 없어 부정확하게 배열로 잡음 → unknown 경유로 실제 런타임 형태에 맞춤).
+  type PromoPostRow = {
+    id: string
+    title: string
+    like_count: number
+    created_at: string
+    artists: { name: string } | null
+    artist_name_text: string | null
+  }
+  const promoRows = (promoResult.data ?? []) as unknown as PromoPostRow[]
+  const promoIds = promoRows.map((p) => p.id)
+
+  const commentCounts: Record<string, number> = {}
+  if (promoIds.length > 0) {
+    const { data: promoComments, error: promoCommentsErr } = await supabase
+      .from('comments')
+      .select('target_id')
+      .eq('target_type', 'post')
+      .in('target_id', promoIds)
+    if (promoCommentsErr) {
+      console.error('promo comments fetch failed:', promoCommentsErr)
+    }
+    for (const c of promoComments ?? []) {
+      commentCounts[c.target_id] = (commentCounts[c.target_id] ?? 0) + 1
+    }
+  }
+
+  const promos: PromoCardData[] = promoRows.map((p) => ({
+    id: p.id,
+    title: p.title,
+    team: p.artists?.name ?? p.artist_name_text ?? null,
+    thumbnailUrl: null,
+    likeCount: p.like_count,
+    commentCount: commentCounts[p.id] ?? 0,
+    time: formatDate(p.created_at),
+  }))
+
+  let galleryPosts: GalleryRowData[] = []
+  if (artistResult.data) {
+    type GalleryPostRow = {
+      id: string
+      title: string
+      user_id: string
+      created_at: string
+      post_flag: GalleryPostFlag
+    }
+    const { data: galleryRows, error: galleryErr } = await supabase
+      .from('gallery_posts')
+      .select('id, title, user_id, created_at, post_flag')
+      .eq('artist_id', artistResult.data.id)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    if (galleryErr) {
+      console.error('gallery posts fetch failed:', galleryErr)
+    }
+
+    // 반응 탭(ReactionTab)과 동일한 패턴: 닉네임 조인 없이 user_id 앞 8자리만 표시
+    galleryPosts = ((galleryRows ?? []) as GalleryPostRow[]).map((g) => ({
+      id: g.id,
+      title: g.title,
+      author: `사용자 ${g.user_id.slice(0, 8)}`,
+      likeCount: 0, // gallery_posts는 아직 좋아요 스키마 없음 (#100 스코프 밖)
+      time: formatDate(g.created_at),
+      flag: g.post_flag,
+    }))
+  }
+
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <main className="max-w-lg mx-auto">
-        {/* 앨범 커버 — 모바일: 전체 너비, md 이상: 중앙 정렬 + 최대 너비 제한 */}
-        <div className="md:max-w-xs md:mx-auto md:mt-6">
-          <AlbumCover
-            src={album.cover_url}
-            alt={`${album.title} 앨범 커버`}
-          />
-        </div>
-
-        {/* 앨범 정보 */}
-        <div className="px-4 pt-4 pb-3">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-snug">
-            {album.title}
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{album.artist_name}</p>
-          <div className="mt-3">
-            <AlbumLikeButton
-              albumId={album.id}
-              initialLiked={albumLiked}
-              initialCount={albumLikeCount}
-              isLoggedIn={!!user}
-            />
-          </div>
-        </div>
-
-        {/* 별점 영역 */}
-        <RatingSection
-          albumId={album.id}
-          initialAvg={ratingAvg}
-          initialCount={ratingCount}
-          initialMyScore={myScore}
-          isLoggedIn={!!user}
-        />
-
-        {/* 코멘트 영역 */}
-        <CommentSection
-          albumId={album.id}
-          initialComments={(comments ?? []) as CommentRow[]}
-          currentUserId={user?.id ?? null}
-          commentLikes={commentLikes}
-        />
-      </main>
-    </div>
+    <AlbumHubClient
+      albumId={album.id}
+      title={album.title}
+      artistName={album.artist_name}
+      coverUrl={album.cover_url}
+      isLoggedIn={!!user}
+      currentUserId={user?.id ?? null}
+      albumLiked={albumLiked}
+      albumLikeCount={albumLikeCount}
+      ratingAvg={ratingAvg}
+      ratingCount={ratingCount}
+      myScore={myScore}
+      comments={(comments ?? []) as CommentRow[]}
+      commentLikes={commentLikes}
+      promos={promos}
+      galleryPosts={galleryPosts}
+      galleryArtistId={artistResult.data?.id ?? null}
+    />
   )
 }

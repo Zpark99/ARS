@@ -150,7 +150,7 @@ export default function BoardCommentSection({ postId, currentUserId }: BoardComm
   }
 
   if (!loaded) {
-    return <p className="text-xs text-gray-400 dark:text-gray-500 py-3">댓글 불러오는 중...</p>
+    return <p className="text-xs text-text-muted py-3">댓글 불러오는 중...</p>
   }
 
   const hasMyComment = currentUserId ? comments.some((c) => c.user_id === currentUserId) : false
@@ -163,8 +163,8 @@ export default function BoardCommentSection({ postId, currentUserId }: BoardComm
     : comments
 
   return (
-    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-      <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-3">댓글</h3>
+    <div className="mt-4 pt-4 border-t border-border">
+      <h3 className="text-xs font-semibold text-text-muted mb-3">댓글</h3>
 
       {currentUserId && !hasMyComment ? (
         <div className="mb-4">
@@ -174,12 +174,12 @@ export default function BoardCommentSection({ postId, currentUserId }: BoardComm
             maxLength={MAX_COMMENT_LENGTH}
             placeholder="댓글을 남겨보세요..."
             rows={2}
-            className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-gray-500 placeholder:text-gray-300 dark:placeholder:text-gray-600"
+            className="w-full border border-border rounded-xl px-3 py-2 text-sm text-text bg-surface resize-none focus:outline-none focus:ring-2 focus:ring-accent placeholder:text-text-muted"
           />
           <div className="flex items-center justify-between mt-1.5">
             <span
               className={`text-xs tabular-nums ${
-                content.length >= MAX_COMMENT_LENGTH ? 'text-red-400' : 'text-gray-300 dark:text-gray-600'
+                content.length >= MAX_COMMENT_LENGTH ? 'text-red-400' : 'text-text-muted'
               }`}
             >
               {content.length}/{MAX_COMMENT_LENGTH}
@@ -187,7 +187,7 @@ export default function BoardCommentSection({ postId, currentUserId }: BoardComm
             <button
               onClick={handleSubmit}
               disabled={!content.trim() || submitting}
-              className="text-xs font-semibold bg-black text-white px-4 py-1.5 rounded-full disabled:opacity-40 active:scale-95 transition-transform"
+              className="text-xs font-semibold bg-accent text-accent-foreground px-4 py-1.5 rounded-full disabled:opacity-40 active:scale-95 transition-transform"
             >
               {submitting ? '등록 중...' : '등록'}
             </button>
@@ -195,11 +195,11 @@ export default function BoardCommentSection({ postId, currentUserId }: BoardComm
           {submitError && <p className="text-xs text-red-500 mt-1">{submitError}</p>}
         </div>
       ) : currentUserId && hasMyComment ? (
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+        <p className="text-xs text-text-muted mb-4">
           댓글은 글당 하나만 작성할 수 있어요. 수정하려면 삭제 후 다시 작성해주세요.
         </p>
       ) : (
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+        <p className="text-xs text-text-muted mb-4">
           <a href="/login" className="text-blue-500 underline-offset-2 hover:underline">
             로그인
           </a>
@@ -208,7 +208,7 @@ export default function BoardCommentSection({ postId, currentUserId }: BoardComm
       )}
 
       {sortedComments.length === 0 ? (
-        <p className="text-sm text-gray-300 dark:text-gray-600 text-center py-6">아직 댓글이 없어요</p>
+        <p className="text-sm text-text-muted text-center py-6">아직 댓글이 없어요</p>
       ) : (
         <ul className="space-y-3">
           {sortedComments.map((comment) => {
@@ -218,24 +218,24 @@ export default function BoardCommentSection({ postId, currentUserId }: BoardComm
                 key={comment.id}
                 className={
                   isOwn
-                    ? 'bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-3'
-                    : 'border-b border-gray-50 dark:border-gray-800 pb-3 last:border-b-0 last:pb-0'
+                    ? 'bg-surface rounded-xl px-3 py-3'
+                    : 'border-b border-border pb-3 last:border-b-0 last:pb-0'
                 }
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                      <span className="text-xs font-semibold text-text-muted">
                         {isOwn ? '나' : `사용자 ${comment.user_id.slice(0, 8)}`}
                       </span>
                       {isOwn && (
-                        <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded-full leading-none">
+                        <span className="text-xs bg-surface-raised text-text-muted px-1.5 py-0.5 rounded-full leading-none">
                           내 댓글
                         </span>
                       )}
-                      <span className="text-xs text-gray-300 dark:text-gray-600">{formatDate(comment.created_at)}</span>
+                      <span className="text-xs text-text-muted">{formatDate(comment.created_at)}</span>
                     </div>
-                    <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed break-words">
+                    <p className="text-sm text-text leading-relaxed break-words">
                       {comment.content}
                     </p>
                     <div className="mt-2">
@@ -246,7 +246,7 @@ export default function BoardCommentSection({ postId, currentUserId }: BoardComm
                         className={`flex items-center gap-1 text-xs transition-colors disabled:opacity-50 ${
                           likesState[comment.id]?.liked
                             ? 'text-accent'
-                            : 'text-gray-300 hover:text-gray-500 dark:text-gray-600 dark:hover:text-gray-400'
+                            : 'text-text-muted hover:text-text'
                         }`}
                       >
                         <svg
@@ -271,7 +271,7 @@ export default function BoardCommentSection({ postId, currentUserId }: BoardComm
                     <button
                       onClick={() => handleDelete(comment.id)}
                       disabled={deletingId === comment.id}
-                      className="shrink-0 text-xs text-gray-300 dark:text-gray-600 hover:text-red-400 active:scale-95 transition-colors disabled:opacity-50"
+                      className="shrink-0 text-xs text-text-muted hover:text-red-400 active:scale-95 transition-colors disabled:opacity-50"
                     >
                       {deletingId === comment.id ? '삭제 중' : '삭제'}
                     </button>

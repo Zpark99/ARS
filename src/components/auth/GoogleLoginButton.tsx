@@ -41,10 +41,10 @@ export default function GoogleLoginButton() {
       <button
         onClick={handleLogin}
         disabled={isLoading}
-        className="w-full flex items-center justify-center gap-3 h-12 px-6 bg-white border border-gray-300 rounded-full text-gray-700 font-medium text-sm hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+        className="w-full flex items-center justify-center gap-3 h-12 px-6 bg-surface border border-border rounded-full text-text font-medium text-sm hover:bg-surface-raised active:bg-surface-raised transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
       >
         {isLoading ? (
-          <span className="text-gray-500">로그인 중...</span>
+          <span className="text-text-muted">로그인 중...</span>
         ) : (
           <>
             <GoogleIcon />

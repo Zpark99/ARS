@@ -1,132 +1,166 @@
-# ARS (Album Review Service) — 개발 규칙
+# CLAUDE.md — ARS (피벗)
 
-## 기술 스택
+> 클로드 코드 작업 규칙서. 모든 기능/수정 작업은 이 워크플로우를 따른다. 임의로 건너뛰지 않는다.
+> 
 
-- **프레임워크**: Next.js (App Router) + TypeScript
-- **스타일링**: Tailwind CSS
-- **백엔드 / DB / 인증**: Supabase
+──────────────────────────────────────────
 
-## 디자인 원칙
+## 🌳 브랜치 전략 (3단계)
 
-- **모바일 우선(mobile-first)**: 기본 스타일은 모바일 기준으로 작성
-- 반응형 레이아웃은 Tailwind의 `md:` / `lg:` 접두어로만 처리
+```
+기능 브랜치 (feat/fix/...)  →  develop  →  main(프로덕션)
+```
 
-## 디렉토리 규칙
+- **기능 브랜치**: 개별 작업 단위. `develop`에서 분기.
+- **develop**: 통합·안정화 브랜치. 기능들이 먼저 모이는 곳.
+- **main**: 프로덕션. Vercel 배포와 연결(ars-eta-one.vercel.app). 항상 배포 가능 상태.
 
-- Supabase 클라이언트: `src/lib/supabase/`
-- 컴포넌트: `src/components/`
+**분기 기준**
 
-## 보안
- b않는다 (`.gitignore`에서 `.env*` 전체 무시 중)
+- 기능 브랜치는 항상 `develop`에서 딴다 (`main` 아님).
+- `main`에는 오직 `develop`을 통해서만 들어간다. 기능 브랜치 → main 직접 금지.
+
+──────────────────────────────────────────
+
+## 🔑 머지 규칙 (질문 → 승인 시 실행)
+
+> 브랜치 구조·머지 방식 모두 법과사전식을 따른다. **머지 전 항상 질문하고, 명시적 승인이 있을 때만 Claude가 머지한다.**
+> 
+- **머지 전 항상 질문한다.** PR 생성 후 사용자에게 머지 여부를 물어본다.
+- **명시적 승인("OK/머지해" 등)이 있을 때만 Claude가 머지한다.** 분명한 답이 없으면 머지하지 않는다.
+- **무응답·모호한 답 = 머지 안 함.** 애매하면 멈추고 다시 확인.
+- **develop → main은 매번 별도 확인.** 프로덕션 배포라 5단계 승인으로 대신하지 않는다.
+- 이슈 없이 작업 시작 금지. 브랜치 없이 직접 작업 금지.
+
+> 취지: "무조건 사람이 머지"는 시간 없을 때 비효율적이었다. 그래서 **질문 → 승인 시 진행**으로 바꿨다. 단, 판단 지점(머지할지)은 항상 사람이 쥔다.
+> 
+
+──────────────────────────────────────────
 
 ## 📋 이슈 → 작업 → 머지 워크플로우 (필수 루틴)
 
-모든 기능/수정 작업은 아래 순서를 따른다. Claude가 이슈 생성부터 PR 생성까지
-직접 실행하며, 머지만 사용자가 수동으로 한다.
-
 ### 1단계 — 이슈 생성 (작업 시작 시)
+
 gh CLI로 이슈를 먼저 만든다.
-- 제목: `<type>: 작업 요약`
-- 본문: 작업 내용 + 완료 조건(DoD)을 체크리스트(- [ ])로
-- 라벨: bug / regular development / urgent development 중 해당하는 것
-- 마일스톤: 해당 마일스톤에 연결 (예: 소셜 레이어 - P2 (게시판), 안정화·배포 - P3)
-  마일스톤 이름이 Phase를 포함하므로 별도 Phase 필드는 없음
-- Start date: 이슈 생성 시점엔 잠정값(오늘 날짜)으로 채워두고, 실제 착수일이 확정되면
-  5단계에서 재확인·갱신한다 / Target date: 마일스톤 기한 / End date: 이슈 생성 시점엔
-  비워두고 5단계(PR 생성)에서 채운다
-- assignee: @me
+
+- 제목: `[Pn] 작업 요약` (Pn = 해당 Phase)
+- 본문: 작업 내용 + DoD를 체크리스트(- [ ])로
+- 라벨: 버그 / 고도화 / 리팩터링 / 백로그 / 문서수정 중 해당
+- 마일스톤: 해당 Phase(P0~P3) 연결
+- project: ARS / assignee: @me
+- Start date: 잠정값(오늘) → 5단계에서 첫 커밋일로 갱신
+- Target date: 마일스톤 기한 / End date: 비워두고 5단계에서 PR 생성일로
 - 생성 후 이슈 번호를 사용자에게 알린다.
 
 ### 2단계 — 브랜치 생성
-- git checkout main && git pull origin main (최신화 먼저)
-- git checkout -b <type>/<간단한-설명> (예: feature/archive-filter, fix/logout-refresh)
-- 브랜치명에 `#`나 공백 금지. type은 feature/fix/refactor/chore/docs.
+
+- `git checkout develop && git pull origin develop` (develop 최신화 먼저)
+- `git checkout -b <type>/<간단한-설명>` (예: `feat/album-hub-tabs`)
+- 브랜치명에 `#`·공백 금지. type은 feat/fix/refactor/chore/docs.
+- ⚠️ 반드시 `develop`에서 분기. `main`에서 따지 않는다.
 
 ### 3단계 — 작업 진행
+
 - 코드/마이그레이션 작업 수행.
-- 마이그레이션은 반드시 "파일 먼저 작성(supabase/migrations/) → 커밋 → DB 적용" 순서.
-  DB에 직접 SQL 실행 후 파일 누락 금지 (유령 마이그레이션 재발 방지).
-- 파괴적 스키마 변경(컬럼 삭제/타입 변경)은 마이그레이션과 코드 수정을
-  같은 브랜치에서 함께 완료하고 로컬 검증 후 커밋한다.
+- 마이그레이션은 반드시 **"파일 먼저 작성(supabase/migrations/) → 커밋 → DB 적용"** 순서.
+DB에 직접 SQL 실행 후 파일 누락 금지 (유령 마이그레이션 재발 방지).
+- 파괴적 스키마 변경(컬럼 삭제/타입 변경)은 마이그레이션+코드 수정을 같은 브랜치에서
+함께 완료하고 로컬 검증 후 커밋. (갤러리 스키마 재설계 = P1 리스크, 특히 주의)
 - 기능 = 명세 + 코드 + 테스트 세트로 진행.
 
-### 4단계 — 커밋 (Claude가 직접 실행)
-1. git status / git diff --stat 로 변경 확인
-2. .env.local 등 비밀 파일이 안 잡혔는지 반드시 확인
-3. 여러 줄 커밋 메시지는 임시 파일에 작성 후 -F로 읽는다
-   (PowerShell 개행 방식은 본문 소실 위험이 있어 사용 금지):
-   - 메시지를 scratchpad/commit_msg.txt 등에 작성
-   - git add . && git commit -F "메시지파일경로"
-4. 커밋 메시지 형식: "<type>: <한 줄 요약> (#이슈번호)" + 본문
-   - 이슈를 완전히 끝내면 본문에 "Closes #N" 추가
-5. git push -u origin <브랜치명>
+### 4단계 — 커밋 (Claude 직접 실행)
 
-### 5단계 — PR 생성 (Claude가 직접 실행)
-- gh pr create --base main --title "..." --body "... Closes #이슈번호"
-- PR 생성까지 완료한 뒤 사용자에게 PR 링크와 함께 알린다.
-- PR 생성 직후 연결된 이슈의 프로젝트 필드를 실제 값으로 갱신한다 (상세: 이슈 필드 규칙 참고)
-  - Start date → 그 작업의 실제 첫 커밋 날짜로 수정
-  - End date → PR 생성일로 설정
-  - Target date는 마일스톤 기한과 다르면 바로잡는다
-- 여기서 멈춘다. ⛔ 머지는 하지 않는다.
+1. `git status` / `git diff --stat` 로 변경 확인
+2. `.env.local` 등 비밀 파일이 안 잡혔는지 반드시 확인 (.gitignore `.env*`)
+3. **여러 줄 커밋 메시지는 임시 파일 작성 후 `F`로 읽는다** (PowerShell 개행 방식 금지 — 본문 소실 위험):
+    - `scratchpad/commit_msg.txt`에 작성 → `git add . && git commit -F scratchpad/commit_msg.txt`
+4. 형식: `"<type>: <한 줄 요약> (#이슈번호)"` + 본문. 이슈 종료 시 본문에 `Closes #N`.
+5. `git push -u origin <브랜치명>`
 
-### 6단계 — 머지 (⛔ 무조건 사용자 수동. Claude 자동 머지 절대 금지)
-- Claude는 어떤 경우에도 머지하지 않는다. gh pr merge 실행 금지.
-- 사용자가 GitHub에서 PR "Files changed"를 직접 검토하고 머지한다.
-- 사용자가 "머지 완료"라고 알리기 전까지 다음 단계로 넘어가지 않는다.
+### 5단계 — PR 생성 + 머지 여부 질문 (기능 → develop)
 
-### 7단계 — 머지 후 로컬 정리 (사용자 "머지 완료" 확인 후)
-- git checkout main && git pull origin main
-- git branch -d <작업브랜치>
+- `gh pr create --base develop --title "..." --body "... Closes #이슈번호"`
+- PR 생성 후 사용자에게 PR 링크 알림 + 프로젝트 필드 갱신
+(Start date → 실제 첫 커밋일 / End date → PR 생성일 / Target date → 마일스톤 기한 일치).
+- **사용자에게 머지 여부를 질문한다:**
+    
+    > "PR #N 생성했습니다. develop으로 머지할까요? (검토 후 직접 하시려면 '내가 할게')"
+    > 
+- **승인("머지해/OK") 시** → Claude가 `gh pr merge --squash` 실행.
+- **"내가 할게"·무응답·모호** → 멈춘다. 임의 머지 금지.
+
+### 6단계 — develop → main 승격 (⚠️ 프로덕션 반영)
+
+- develop에 기능이 충분히 쌓이고 안정화됐을 때만.
+- `gh pr create --base main --head develop` 로 승격 PR 생성.
+- **반드시 별도로 명시적 질문:**
+    
+    > "develop → main 승격은 프로덕션(Vercel) 배포로 이어집니다. 진행할까요?"
+    > 
+- 5단계와 별개로 **매번 따로** 확인. 5단계 승인이 6단계를 대신하지 않는다.
+- 승인 시 머지, 아니면 멈춤.
+
+### 7단계 — 머지 후 로컬 정리
+
+- `git checkout develop && git pull origin develop`
+- `git branch -d <작업브랜치>`
+- main 반영 시: `git checkout main && git pull origin main`
+
+──────────────────────────────────────────
+
+## 🖥️ 커밋 메시지 규칙 (Windows/PowerShell)
+
+- Bash heredoc(`$(cat <<'EOF' ...)`) 금지 — PowerShell에서 깨짐.
+- PowerShell 큰따옴표 개행(`git commit -m "...여러 줄..."`)도 본문 소실 위험 → 금지.
+- 여러 줄은 임시 파일 + `git commit -F` (4단계 참고).
+- 이미 push된 커밋 메시지 오류 시: `git commit --amend` → `git push --force-with-lease` (`-force` 단독 금지).
 
 ### 커밋 메시지 정확성 원칙
-- "확인 완료", "정상 동작"이라고 쓰려면 실제 검증한 케이스를 명시한다.
-- 검증하지 않은 케이스를 검증했다고 단정하지 않는다.
-- 알려진 제한사항은 커밋 메시지에 숨기지 않고 명시한다.
 
-### 실행 범위 요약
-- Claude 직접 실행: 이슈 생성 / 브랜치 / 커밋 / push / PR 생성 / 머지 후 정리
-- 사용자 수동 전용: 머지 (Files changed 검토 후)
+- "확인 완료/정상 동작"은 실제 검증한 케이스를 명시. 미검증을 검증했다고 단정 금지.
+- 알려진 제한사항은 숨기지 않고 커밋 메시지에 명시.
 
-## 🖥️ 커밋 메시지 작성 규칙 (Windows/PowerShell 환경)
+──────────────────────────────────────────
 
-이 프로젝트는 Windows PowerShell 터미널을 사용한다. Bash 전용 문법
-($(cat <<'EOF' ... EOF) 등 heredoc)은 PowerShell에서 깨지므로 사용 금지.
-PowerShell 큰따옴표 개행 방식(`git commit -m "...여러 줄..."`)도 본문 소실
-위험이 있어 사용하지 않는다 — 여러 줄 커밋 메시지 작성법은 워크플로우
-4단계 참고 (임시 파일 작성 후 `git commit -F`).
+## 🔐 보안·환경 규칙
 
-### 커밋 메시지 오류 발견 시
-이미 push된 커밋의 메시지가 잘못됐으면:
-  git commit --amend -m "올바른 메시지"
-  git push --force-with-lease
-(--force-with-lease만 사용, --force 단독 사용 금지 — 안전장치 유지)
+- **SERVICE_ROLE_KEY는 서버(Route Handler)에서만.** 클라 노출 절대 금지.
+- `.env.local` 절대 커밋 금지. 커밋 전 항상 확인.
+- Supabase RLS 필수: 쓰기는 본인 소유(`auth.uid() = author/user_id`), 열람은 공개 테이블 anon.
+- 관리자 전용(앨범 보정·공지·요청 승인)은 `is_admin` 정책.
 
-## 📅 이슈 필드 규칙
+──────────────────────────────────────────
 
-이슈 생성 시 아래 필드를 모두 지정한다:
-- 라벨: bug / regular development / urgent development
-- 마일스톤: 주제별 (소셜 / 게시판 / 랭킹·탐색 / 시스템 등, 실제 저장소 마일스톤 기준)
-  마일스톤 이름에 Phase가 포함되므로 별도 Phase 필드는 없음
-- project : ARS
-- Start date: 실제 개발 착수일 (= 그 작업의 코드를 처음 만든 날짜. 브랜치 생성일이나
-  이슈 생성일이 아니라 첫 커밋 날짜 기준. 이슈 생성 시점엔 잠정값을 넣고,
-  실제 착수일이 확정되면 갱신한다)
-- Target date: 해당 이슈가 속한 마일스톤의 기한으로 고정 (마일스톤이 바뀌면 함께 갱신)
-- End date: PR 생성일로 고정 (머지일이 아님 — PR 생성 시점 기준. 이슈 생성 시점엔
-  비워두고 5단계에서 채운다)
+## 🧩 프로젝트 컨벤션
 
-이슈 생성 시점의 값은 잠정치일 수 있으므로, 5단계(PR 생성) 직후 Start date/End date가
-실제 값과 맞는지 반드시 재확인·갱신한다. Target date는 마일스톤 기한과 항상 일치해야 하며
-불일치 시 그 자리에서 바로잡는다.
+- 스택: Next.js(App Router) + TypeScript + Tailwind + Supabase + Vercel.
+- 디렉토리: Supabase 클라이언트 `src/lib/supabase/`, 컴포넌트 `src/components/`.
+- **모바일 우선**: 기본 스타일 모바일 기준, 반응형은 `md:`/`lg:`로만. 분기 767px.
+- 색/간격/컴포넌트는 **05. Design-System 토큰만** 사용. 임의 값 금지 (Semantic 경유, Brand 직접 사용 금지).
+- posts는 board_type으로 분기(gallery/promo/qa/update). 좋아요·댓글 polymorphic.
+- likes 동시성 = unique + `ON CONFLICT DO NOTHING`. 목록은 키셋 커서(offset 금지).
 
-### gh CLI로 프로젝트 필드 갱신하는 법
-```
-gh project item-list 6 --owner Zpark99 --format json   # ITEM_ID 조회 (이슈 번호로 필터)
-gh project item-edit --id <ITEM_ID> --project-id <PROJECT_ID> --field-id <FIELD_ID> --date "YYYY-MM-DD"
-```
-ARS 프로젝트(project 6)의 고정 ID (재조회 불필요):
-- project-id: `PVT_kwHOCiWYls4BZemI`
-- Start date field-id: `PVTF_lAHOCiWYls4BZemIzhUc95U`
-- Target date field-id: `PVTF_lAHOCiWYls4BZemIzhUc95Y`
-- End Date field-id: `PVTF_lAHOCiWYls4BZemIzhUuYDY`
+──────────────────────────────────────────
+
+## 🚫 더미 데이터·빈 데이터 규칙 (#49·#96 재발 방지)
+
+> mbid-1 같은 가짜 라우팅 식별자를 더미 데이터에 썼다가 실제 클릭 시 404가 나는 문제가
+> #49(홈/아카이브)에서 한 번, #96(아카이브 재설계 #89 과정에서 재발)에서 또 한 번 발생했다.
+> 같은 유형이 세 번째로 재발하지 않도록 규칙으로 못박는다.
+>
+- **라우팅에 쓰이는 식별자는 더미여도 가짜 값 금지.** mbid·id처럼 링크가 실제로 이동하는
+  값(`/album/[mbid]` 등)은 레이아웃 단계라도 반드시 실제 존재하는 값(DB에 있는 값 또는
+  외부 API로 검증 가능한 값)을 쓴다. "화면만 보여주면 되니까 mbid-1로 채운다"는 금지.
+- **Supabase 쿼리 결과가 빈 배열/null이어도 에러처럼 보이면 안 된다.** 명시적 빈 상태
+  문구·CTA를 둔다(예: 아카이브 "그런 앨범이 없어요" + 등록 요청하기). `undefined`/빈
+  문자열을 화면에 그대로 렌더하지 않는다.
+- **더미→실데이터 전환 PR은 클릭 도달을 최소 1건 직접 확인한다.** 목록 렌더 확인만으로
+  끝내지 않고, 그 목록에서 실제로 하나를 눌러 목적지 페이지까지 도달하는지 검증하고
+  PR 검증란에 남긴다.
+
+──────────────────────────────────────────
+
+## 실행 범위 요약
+
+- **Claude 직접**: 이슈 생성 / 브랜치 / 커밋 / push / PR 생성 / **승인 시 머지** / 머지 후 정리
+- **사용자 판단 지점**: 머지 여부 (질문에 "OK/머지해" 승인 시 Claude 실행 · develop→main은 매번 별도 확인)
