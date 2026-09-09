@@ -124,7 +124,7 @@ DB에 직접 SQL 실행 후 파일 누락 금지 (유령 마이그레이션 재�
 
 ## 🔐 보안·환경 규칙
 
-- **Spotify client_secret·SERVICE_ROLE_KEY는 서버(Route Handler)에서만.** 클라 노출 절대 금지.
+- **SERVICE_ROLE_KEY는 서버(Route Handler)에서만.** 클라 노출 절대 금지.
 - `.env.local` 절대 커밋 금지. 커밋 전 항상 확인.
 - Supabase RLS 필수: 쓰기는 본인 소유(`auth.uid() = author/user_id`), 열람은 공개 테이블 anon.
 - 관리자 전용(앨범 보정·공지·요청 승인)은 `is_admin` 정책.
