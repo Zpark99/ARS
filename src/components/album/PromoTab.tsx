@@ -1,8 +1,7 @@
 // components/album/PromoTab.tsx
 // 앨범 허브 스펙 - 홍보 탭. 이 앨범에 연결된 홍보 글만(PromoCard, album_id 필터, #100/#102).
 // 실데이터는 album/[mbid]/page.tsx에서 board_posts WHERE board_type='promo' AND
-// album_id=album.id 로 조회해 props로 내려받는다. 게시글 상세 라우트가 아직 없어
-// href는 /promo 목록과 동일하게 "#" placeholder (기존 사이트 전역 관례, 이번 PR 신규 아님).
+// album_id=album.id 로 조회해 props로 내려받는다. 게시글 상세는 /promo/[postId] (#120).
 
 import { PromoCard, type PromoCardData } from "@/components/cards/PromoCard";
 
@@ -14,7 +13,7 @@ export function PromoTab({ promos }: { promos: PromoCardData[] }) {
       ) : (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {promos.map((promo) => (
-            <PromoCard key={promo.id} promo={promo} href="#" />
+            <PromoCard key={promo.id} promo={promo} href={`/promo/${promo.id}`} />
           ))}
         </div>
       )}

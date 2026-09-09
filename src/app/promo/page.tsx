@@ -1,7 +1,7 @@
 // app/promo/page.tsx
 // 컴포넌트스펙_5_갤러리홍보 - 화면 4: 홍보게시판 (#70 → #88 실데이터 연결).
 // 앨범 허브 홍보 탭(album_id 필터)과 달리 여기는 필터 없는 board_posts promo 전체 목록.
-// 상세 라우트가 사이트에 없어 카드 클릭은 앨범 허브 PromoTab과 동일하게 "#" 관례 유지.
+// 게시글 상세는 /promo/[postId] (#120).
 
 import { PromoClient } from "@/components/promo/PromoClient";
 import { createClient } from "@/lib/supabase/server";

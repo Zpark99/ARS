@@ -51,7 +51,7 @@ export function PromoClient({
       ) : (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {promos.map((promo) => (
-            <PromoCard key={promo.id} promo={promo} href="#" />
+            <PromoCard key={promo.id} promo={promo} href={`/promo/${promo.id}`} />
           ))}
         </div>
       )}
