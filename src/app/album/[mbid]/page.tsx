@@ -253,6 +253,7 @@ export default async function AlbumPage({
       commentLikes={commentLikes}
       promos={promos}
       galleryPosts={galleryPosts}
+      galleryArtistId={artistResult.data?.id ?? null}
     />
   )
 }
