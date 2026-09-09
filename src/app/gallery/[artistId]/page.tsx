@@ -1,7 +1,6 @@
 // app/gallery/[artistId]/page.tsx
 // 컴포넌트스펙_5_갤러리홍보 - 화면 3: 팀별 갤러리 (#70 → #88 실데이터 연결).
-// artistId는 artists.id(실제 UUID). 게시글 상세 라우트가 없어 클릭은 "#" 관례 유지
-// (앨범 허브 GalleryTab과 동일, #100/#103에서 이미 그렇게 배포됨).
+// artistId는 artists.id(실제 UUID). 게시글 상세는 /gallery/[artistId]/[postId] (#118).
 
 import { notFound } from "next/navigation";
 import { TeamGalleryClient } from "@/components/gallery/TeamGalleryClient";

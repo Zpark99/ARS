@@ -30,6 +30,7 @@ export function AlbumHubClient({
   commentLikes,
   promos,
   galleryPosts,
+  galleryArtistId,
 }: {
   albumId: string;
   title: string;
@@ -46,6 +47,7 @@ export function AlbumHubClient({
   commentLikes: Record<string, { count: number; liked: boolean }>;
   promos: PromoCardData[];
   galleryPosts: GalleryRowData[];
+  galleryArtistId: string | null;
 }) {
   // 재설계 전(평가 페이지) 기본 진입점이 평점이었던 것과 동일하게, 정보 탭을 기본값으로 유지
   const [activeTab, setActiveTab] = useState<HubTab>("info");
@@ -64,7 +66,7 @@ export function AlbumHubClient({
       <HubTabs active={activeTab} onChange={setActiveTab} />
 
       {activeTab === "promo" && <PromoTab promos={promos} />}
-      {activeTab === "gallery" && <GalleryTab posts={galleryPosts} />}
+      {activeTab === "gallery" && <GalleryTab posts={galleryPosts} artistId={galleryArtistId} />}
       {activeTab === "reaction" && (
         <ReactionTab
           albumId={albumId}

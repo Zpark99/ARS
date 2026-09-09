@@ -129,14 +129,14 @@ export default function BoardPostForm({
           </div>
 
           {artistMode === 'search' ? (
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2">
               <input
                 type="text"
                 list="promo-artist-options"
                 value={artistInput}
                 onChange={(e) => setArtistInput(e.target.value)}
                 placeholder="팀 검색 (필수)"
-                className="flex-1 border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
               />
               <datalist id="promo-artist-options">
                 {artists.map((a) => (
@@ -151,7 +151,7 @@ export default function BoardPostForm({
                     value={albumInput}
                     onChange={(e) => setAlbumInput(e.target.value)}
                     placeholder="앨범 검색 (선택)"
-                    className="flex-1 border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
                   />
                   <datalist id="promo-album-options">
                     {albums.map((al) => (
@@ -162,13 +162,13 @@ export default function BoardPostForm({
               )}
             </div>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2">
               <input
                 type="text"
                 value={artistManualText}
                 onChange={(e) => setArtistManualText(e.target.value)}
                 placeholder="팀 이름 직접 입력 (필수)"
-                className="flex-1 border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
+                className="w-full border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
               />
               {hasArtist && (
                 <>
@@ -178,7 +178,7 @@ export default function BoardPostForm({
                     value={albumInput}
                     onChange={(e) => setAlbumInput(e.target.value)}
                     placeholder="앨범 검색 (선택)"
-                    className="flex-1 border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
+                    className="w-full border border-border rounded-lg px-3 py-2 text-sm text-text bg-bg focus:outline-none focus:ring-1 focus:ring-accent placeholder:text-text-muted"
                   />
                   <datalist id="promo-album-options">
                     {albums.map((al) => (

@@ -144,7 +144,7 @@ export function TeamGalleryClient({
       ) : (
         <div className="rounded-md border border-border bg-surface px-3">
           {filtered.map((post) => (
-            <GalleryRow key={post.id} post={post} href="#" />
+            <GalleryRow key={post.id} post={post} href={`/gallery/${artistId}/${post.id}`} />
           ))}
         </div>
       )}
