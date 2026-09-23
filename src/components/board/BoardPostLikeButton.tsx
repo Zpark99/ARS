@@ -3,31 +3,41 @@
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useLikeToggle } from '@/hooks/useLikeToggle'
+import type { LikeTargetType } from '@/lib/validation/like'
 
 interface BoardPostLikeButtonProps {
   postId: string
   currentUserId: string | null
+  targetType?: LikeTargetType
 }
 
-async function loadInitialLikeState(postId: string, currentUserId: string | null) {
+async function loadInitialLikeState(
+  targetType: LikeTargetType,
+  postId: string,
+  currentUserId: string | null
+) {
   const supabase = createClient()
 
   const [countRes, ownRes] = await Promise.all([
-    supabase.from('likes').select('id', { count: 'exact', head: true }).eq('target_type', 'post').eq('target_id', postId),
+    supabase.from('likes').select('id', { count: 'exact', head: true }).eq('target_type', targetType).eq('target_id', postId),
     currentUserId
-      ? supabase.from('likes').select('id').eq('user_id', currentUserId).eq('target_type', 'post').eq('target_id', postId).maybeSingle()
+      ? supabase.from('likes').select('id').eq('user_id', currentUserId).eq('target_type', targetType).eq('target_id', postId).maybeSingle()
       : Promise.resolve({ data: null }),
   ])
 
   return { count: countRes.count ?? 0, liked: !!ownRes.data }
 }
 
-export default function BoardPostLikeButton({ postId, currentUserId }: BoardPostLikeButtonProps) {
+export default function BoardPostLikeButton({
+  postId,
+  currentUserId,
+  targetType = 'post',
+}: BoardPostLikeButtonProps) {
   const router = useRouter()
   const { liked, count, loading, ready, toggle } = useLikeToggle({
-    targetType: 'post',
+    targetType,
     targetId: postId,
-    loadInitial: () => loadInitialLikeState(postId, currentUserId),
+    loadInitial: () => loadInitialLikeState(targetType, postId, currentUserId),
   })
 
   const handleClick = () => {

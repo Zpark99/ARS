@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { MAX_COMMENT_LENGTH } from '@/lib/validation/comment'
-import type { CommentRow } from '@/types/album'
+import type { CommentRow, CommentTargetType } from '@/types/album'
 
 type CommentLikeInfo = { count: number; liked: boolean }
 
 interface BoardCommentSectionProps {
   postId: string
   currentUserId: string | null
+  targetType?: CommentTargetType
 }
 
 function formatDate(iso: string): string {
@@ -21,7 +22,11 @@ function formatDate(iso: string): string {
   })
 }
 
-export default function BoardCommentSection({ postId, currentUserId }: BoardCommentSectionProps) {
+export default function BoardCommentSection({
+  postId,
+  currentUserId,
+  targetType = 'post',
+}: BoardCommentSectionProps) {
   const router = useRouter()
   const [comments, setComments] = useState<CommentRow[]>([])
   const [likesState, setLikesState] = useState<Record<string, CommentLikeInfo>>({})
@@ -37,7 +42,7 @@ export default function BoardCommentSection({ postId, currentUserId }: BoardComm
     let cancelled = false
 
     async function loadComments() {
-      const res = await fetch(`/api/comments?targetType=post&targetId=${postId}`)
+      const res = await fetch(`/api/comments?targetType=${targetType}&targetId=${postId}`)
       if (!res.ok) {
         if (!cancelled) setLoaded(true)
         return
@@ -73,7 +78,7 @@ export default function BoardCommentSection({ postId, currentUserId }: BoardComm
     return () => {
       cancelled = true
     }
-  }, [postId, currentUserId, reloadTick])
+  }, [postId, currentUserId, targetType, reloadTick])
 
   const handleSubmit = async () => {
     if (!content.trim() || submitting) return
@@ -83,7 +88,7 @@ export default function BoardCommentSection({ postId, currentUserId }: BoardComm
       const res = await fetch('/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetType: 'post', targetId: postId, content }),
+        body: JSON.stringify({ targetType, targetId: postId, content }),
       })
       if (!res.ok) {
         const json = await res.json()

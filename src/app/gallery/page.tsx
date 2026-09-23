@@ -24,7 +24,7 @@ export default async function GalleryHomePage() {
   const [conceptResult, artistsResult] = await Promise.all([
     supabase
       .from("gallery_posts")
-      .select("id, title, user_id, created_at, artist_id")
+      .select("id, title, user_id, created_at, artist_id, like_count")
       .eq("post_flag", "concept")
       .order("created_at", { ascending: false })
       .limit(16),
@@ -42,7 +42,7 @@ export default async function GalleryHomePage() {
     id: p.id,
     title: p.title,
     author: `사용자 ${p.user_id.slice(0, 8)}`,
-    likeCount: 0, // gallery_posts는 아직 좋아요 스키마 없음 (#104 백로그)
+    likeCount: p.like_count,
     time: formatDate(p.created_at),
     flag: "concept",
   }));
