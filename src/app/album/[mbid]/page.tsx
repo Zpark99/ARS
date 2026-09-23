@@ -214,10 +214,11 @@ export default async function AlbumPage({
       user_id: string
       created_at: string
       post_flag: GalleryPostFlag
+      like_count: number
     }
     const { data: galleryRows, error: galleryErr } = await supabase
       .from('gallery_posts')
-      .select('id, title, user_id, created_at, post_flag')
+      .select('id, title, user_id, created_at, post_flag, like_count')
       .eq('artist_id', artistResult.data.id)
       .order('created_at', { ascending: false })
       .limit(20)
@@ -230,7 +231,7 @@ export default async function AlbumPage({
       id: g.id,
       title: g.title,
       author: `사용자 ${g.user_id.slice(0, 8)}`,
-      likeCount: 0, // gallery_posts는 아직 좋아요 스키마 없음 (#100 스코프 밖)
+      likeCount: g.like_count,
       time: formatDate(g.created_at),
       flag: g.post_flag,
     }))
