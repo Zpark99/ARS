@@ -16,7 +16,7 @@ export function GalleryHotSection({ posts }: { posts: GalleryRowData[] }) {
             <GalleryRow
               key={post.id}
               post={post}
-              href={post.artistId ? `/gallery/${post.artistId}#gallery-post-${post.id}` : "/gallery"}
+              href={post.artistId ? `/gallery/${post.artistId}/${post.id}` : "/gallery"}
             />
           ))}
         </div>

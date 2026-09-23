@@ -88,6 +88,12 @@ export function BoardListClient({
         )}
       </div>
 
+      {boardType === "qa" && (
+        <p className="text-caption text-text-muted">
+          써보시면서 불편한 점이나 개선이 필요한 부분이 있으면 남겨주세요
+        </p>
+      )}
+
       {isWriting && (
         <div className="rounded-md border border-border bg-surface p-4">
           <BoardPostForm onSubmit={handleCreate} onCancel={() => setIsWriting(false)} submitLabel="작성" />

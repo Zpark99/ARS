@@ -13,7 +13,7 @@ export function PromoSection({ promos }: { promos: PromoCardData[] }) {
       ) : (
         <div className="flex flex-col gap-2">
           {promos.map((promo) => (
-            <PromoCard key={promo.id} promo={promo} href="/promo" />
+            <PromoCard key={promo.id} promo={promo} href={`/promo/${promo.id}`} />
           ))}
         </div>
       )}

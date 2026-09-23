@@ -83,7 +83,7 @@ async function getRealtimeFeed(
       .limit(10),
     supabase
       .from("gallery_posts")
-      .select("user_id, created_at, artist_id, artists(name)")
+      .select("id, user_id, created_at, artist_id, artists(name)")
       .order("created_at", { ascending: false })
       .limit(10),
   ]);
@@ -123,13 +123,13 @@ async function getRealtimeFeed(
     });
   }
 
-  type GalleryRow = { user_id: string; created_at: string; artist_id: string; artists: { name: string } | null };
+  type GalleryRow = { id: string; user_id: string; created_at: string; artist_id: string; artists: { name: string } | null };
   for (const g of (galleryResult.data ?? []) as unknown as GalleryRow[]) {
     events.push({
       userId: g.user_id,
       createdAt: g.created_at,
       action: `${g.artists?.name ?? "알 수 없는 팀"} 갤러리에 글을 남겼어요`,
-      href: `/gallery/${g.artist_id}`,
+      href: `/gallery/${g.artist_id}/${g.id}`,
     });
   }
 
