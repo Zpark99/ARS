@@ -19,6 +19,7 @@
 |---|---|---|
 | v0.1~v0.3 (기획) | 2026-08-11 ~ 08-26 | Notion에서 관리. Spotify 연동, `posts` 통합, `notifications`/`album_requests` 등을 전제로 설계 |
 | v1.0 (본 문서) | 2026-09-10 | 라이브 DB 전수 조회 기준으로 전면 재작성. 레포(`docs/03_ERD.md`)로 이관 |
+| v1.0.1 | 2026-09-24 | `album_requests` 관리자 확인 = Supabase 콘솔 수동 결정 반영 (#153) |
 
 ---
 
@@ -311,7 +312,7 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | 게시글 구조 | `posts` 단일 통합 테이블 (board_type: gallery/promo/qa/update) | `board_posts`(qa/updates/promo) + `gallery_posts` 완전 분리 테이블 2개 | **수정** — 통합 안 됨 |
 | 갤러리 흡수 | `galleries` 폐기 → `artists`가 흡수 | `artists`에 `gallery_description`/`post_count`/`subscriber_count`/`is_gallery_open` 실재. `galleries` 테이블은 애초에 없었음(폐기가 아니라 무존재) | **일치(용어만 정정)** |
 | 앨범/아티스트 출처 | Spotify API 임포트 (`spotify_id`, `source`, `is_verified`) | MusicBrainz `mbid` 기준. `spotify_id`/`source`/`is_verified` 컬럼 전부 없음 | **삭제/전면 수정** |
-| `album_requests` | 앨범 등록 요청 테이블 (신규 계획) | 테이블 없음, 추적 이슈도 없음(백로그 검색 결과 0건) | **삭제** — 계획 자체가 조용히 폐기된 것으로 보임 |
+| `album_requests` | 앨범 등록 요청 테이블 (신규 계획) | 테이블 없음. 요청 모달(`AlbumRequestModal`)은 insert 없는 더미 제출 | **보류(폐기 아님)** — 관리자 확인은 콘솔 수동으로 확정, 9장 참조 |
 | `notifications` | 알림 테이블 (신규 계획) | 테이블 없음. `/notifications` 라우트는 있으나 빈 상태만 렌더하는 스텁 | **로드맵 이동** (#128) |
 | `monthly_ranking` (VIEW) | 월간 TOP/HOT 통합 뷰 | 이름 다름 + 2개로 분리: `popular_albums`(전체 인기), `monthly_artists`(이달 아티스트) | **수정** |
 | `profiles.username`/`is_admin` | UNIQUE username, is_admin 관리자 플래그 | 컬럼명은 `nickname`(UNIQUE 아님), `is_admin` 컬럼 자체 없음 | **수정** |
@@ -407,5 +408,5 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | 갤러리 게시글 좋아요 | `likes.target_type`에 갤러리 포함 가정 | 스키마 없어 항상 0 | #104 |
 | 갤러리 이미지 업로드 | — | Storage 연동 없음 | #124 |
 | 아카이브 장르/발매연도 필터 | — | `albums`에 해당 컬럼 자체 없음 (MusicBrainz 백필 선행 필요) | #130 |
-| `album_requests` | 앨범 등록 요청(검색 0 → 요청 → 관리자 승인) | 테이블 없음, **추적 이슈도 없음** — 계획이 조용히 폐기된 것으로 보임 | 없음 [확인 필요] |
+| `album_requests` | 앨범 등록 요청(검색 0 → 요청 → 관리자 승인) | 테이블 없음, 모달은 더미 제출(저장 안 됨). **관리자 확인 = Supabase 콘솔 수동으로 확정**(2026-09-24, 06 §5와 동일) — role 기반 관리자 UI는 v1.1. 콘솔 확인은 테이블 생성 + insert 연결 후부터 유효 | 저장 연결: 모달 `TODO(#88)` / 관리자 UI: #125 |
 | Spotify 연동 전반 | 앨범/아티스트 임포트, `spotify_id`/`source`/`is_verified` | 전면 폐기, MusicBrainz로 대체 | — |
