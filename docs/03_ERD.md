@@ -20,6 +20,7 @@
 | v0.1~v0.3 (기획) | 2026-08-11 ~ 08-26 | Notion에서 관리. Spotify 연동, `posts` 통합, `notifications`/`album_requests` 등을 전제로 설계 |
 | v1.0 (본 문서) | 2026-09-10 | 라이브 DB 전수 조회 기준으로 전면 재작성. 레포(`docs/03_ERD.md`)로 이관 |
 | v1.0.1 | 2026-09-24 | `album_requests` 관리자 확인 = Supabase 콘솔 수동 결정 반영 (#153) |
+| v1.0.2 | 2026-09-26 | 017/018(갤러리 댓글·좋아요, #147/#150) 라이브 DB 조회 기준 반영. 로드맵 추적 번호 갱신(#88 → #155/#156, #104 해소, #148 추가) (#157) |
 
 ---
 
@@ -34,8 +35,8 @@
 | `albums` | 앨범 카탈로그 (MusicBrainz `mbid` 기준) |
 | `board_posts` | 게시판 통합 테이블 — `board_type`으로 `qa`/`updates`/`promo` 3종만 분기 (**`gallery`는 여기 없음**) |
 | `gallery_posts` | 갤러리 글. `board_posts`와 완전히 분리된 별도 테이블 |
-| `comments` | 댓글 (다형성: `target_type` ∈ `album`/`post`) |
-| `likes` | 좋아요 (다형성: `target_type` ∈ `album`/`comment`/`post`) |
+| `comments` | 댓글 (다형성: `target_type` ∈ `album`/`post`/`gallery_post`) |
+| `likes` | 좋아요 (다형성: `target_type` ∈ `album`/`comment`/`post`/`gallery_post`) |
 | `follows` | 유저→유저 팔로우 |
 | `gallery_subscriptions` | 유저→아티스트(갤러리) 구독 |
 | `ratings` | 평점 (앨범 상세 부가 정보로 강등, #71) |
@@ -115,13 +116,14 @@ erDiagram
     text title
     text content
     text post_flag "notice | concept | normal"
+    int like_count "default 0"
     timestamptz created_at
     timestamptz updated_at
   }
   comments {
     uuid id PK
     uuid user_id FK
-    text target_type "album | post"
+    text target_type "album | post | gallery_post"
     uuid target_id "폴리모픽, FK 아님"
     text content
     timestamptz created_at
@@ -129,7 +131,7 @@ erDiagram
   likes {
     uuid id PK
     uuid user_id FK
-    text target_type "album | comment | post"
+    text target_type "album | comment | post | gallery_post"
     uuid target_id "폴리모픽, FK 아님"
     timestamptz created_at
   }
@@ -153,7 +155,7 @@ erDiagram
   }
 ```
 
-> **폴리모픽 주의**: `comments.target_id` / `likes.target_id`는 실제 FK 제약이 없습니다(대상 테이블이 `album`/`post`/`comment`로 갈리기 때문). 위 다이어그램에서도 실선 FK로 그리지 않았습니다 — 애플리케이션 레벨에서만 무결성을 보장합니다.
+> **폴리모픽 주의**: `comments.target_id` / `likes.target_id`는 실제 FK 제약이 없습니다(대상 테이블이 `album`/`post`/`gallery_post`/`comment`로 갈리기 때문). 위 다이어그램에서도 실선 FK로 그리지 않았습니다 — 애플리케이션 레벨에서만 무결성을 보장합니다.
 > **`albums.artist_name`은 `artists`를 가리키는 FK가 아니라 자유 텍스트**입니다. `board_posts`/`gallery_posts`가 `artists.id`로 팀을 연결하는 것과 다른 경로라, 두 값이 어긋나는 경우가 실측 22%입니다(#101, 9장 로드맵).
 
 ---
@@ -233,9 +235,11 @@ CHECK 제약:
 | title | text | CHECK ≤100자 |
 | content | text | CHECK ≤2000자 |
 | post_flag | text | NOT NULL, default `normal`, CHECK ∈ `notice`,`concept`,`normal` |
+| like_count | int | NOT NULL, default 0 — 018에서 추가(#150) |
 | created_at / updated_at | timestamptz | default now() |
 
-> 좋아요 스키마 없음 — `likes.target_type`에 gallery_posts용 값이 없어 갤러리 글은 좋아요 카운트가 항상 0 (#104, 로드맵).
+> 댓글·좋아요는 `comments`/`likes`의 `target_type='gallery_post'`로 붙습니다(017/018). `board_posts`의 `post`를 재사용하지 않은 이유: 두 테이블은 UUID 공간이 달라 `target_id`만으로 대상 테이블을 알 수 없게 되기 때문(target_type ↔ 테이블 1:1 유지).
+> 단, `board_posts`의 009와 달리 **삭제 시 연관 댓글/좋아요 정리 트리거가 없습니다** — 현재 UI에 갤러리 글 삭제 기능이 없어 고아 데이터는 생기지 않지만, 삭제 기능 도입 전 선행 필요(#148, 9장 로드맵).
 
 ### 3.6 `comments` (다형성)
 
@@ -243,7 +247,7 @@ CHECK 제약:
 |---|---|---|
 | id | uuid | PK |
 | user_id | uuid | NOT NULL, FK→auth.users |
-| target_type | text | NOT NULL, CHECK ∈ `album`,`post` |
+| target_type | text | NOT NULL, CHECK ∈ `album`,`post`,`gallery_post` |
 | target_id | uuid | NOT NULL, FK 없음(폴리모픽) |
 | content | text | CHECK ≤500자 |
 | created_at | timestamptz | default now() |
@@ -256,12 +260,12 @@ CHECK 제약:
 |---|---|---|
 | id | uuid | PK |
 | user_id | uuid | NOT NULL, FK→auth.users |
-| target_type | text | NOT NULL, CHECK ∈ `album`,`comment`,`post` |
+| target_type | text | NOT NULL, CHECK ∈ `album`,`comment`,`post`,`gallery_post` |
 | target_id | uuid | NOT NULL, FK 없음(폴리모픽) |
 | created_at | timestamptz | default now() |
 
 UNIQUE(`user_id`,`target_type`,`target_id`) — 동시성 대응(`ON CONFLICT DO NOTHING`).
-`sync_like_count()` 트리거(likes AFTER INSERT/DELETE)가 `albums.like_count`/`board_posts.like_count`를 캐시 컬럼으로 원자적 증감(#36).
+`sync_like_count()` 트리거(likes AFTER INSERT/DELETE)가 `albums.like_count`/`board_posts.like_count`/`gallery_posts.like_count`를 캐시 컬럼으로 원자적 증감(#36, 갤러리 분기는 018 #150).
 
 ### 3.8 `follows`
 
@@ -320,7 +324,7 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | promo 팀 연결 필수 여부 | 014에서 필수 CHECK 제거 → 완전 자유 | 016에서 "artist_id 또는 artist_name_text 필수"로 재도입 | **수정** — 완전 자유화 아님 |
 | `idx_board_posts_promo_album` | 문서에 없음 | 실재(#100, promo+album_id 부분 인덱스) | **추가 반영 필요** |
 | `albums.artist_name` ↔ `artists` | 문서상 `albums.artist_id` FK로 연결 | 실제로는 `artists` FK 없이 자유 텍스트. 자동 동기화 없어 매칭 갭 22%(#101) | **수정** — 설계와 다른 경로 |
-| `likes` target_type | `post`/`comment`/`album` | 동일(`album`/`comment`/`post`) | **일치** |
+| `likes` target_type | `post`/`comment`/`album` | `album`/`comment`/`post` + `gallery_post`(018, 갤러리가 별도 테이블이라 신설). `comments`도 `gallery_post` 추가(017) | **소폭 수정** |
 | `ratings` | UNIQUE(user_id,album_id), score numeric | 동일 + 0.5 단위 CHECK, UPDATE 소유권 이전 차단 정책까지 실재 | **일치(세부 보강)** |
 | `follows` PK | 복합 PK(follower_id, following_id) | surrogate `id` PK + UNIQUE(follower_id, following_id) 조합, 자기팔로우 금지 CHECK | **소폭 수정** |
 
@@ -364,7 +368,7 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | likes | `likes_user_id_target_type_target_id_key` (UNIQUE) | 중복 좋아요 방지, 동시성 대응 |
 | ratings | `ratings_user_id_album_id_key` (UNIQUE) | 앨범당 유저 평점 1개 |
 
-> 기획 문서가 언급한 키셋 커서 페이지네이션은 **아직 적용되지 않았습니다** — 목록 화면의 "더 보기"는 비활성 플레이스홀더 상태입니다(#88 DoD 잔여).
+> 기획 문서가 언급한 키셋 커서 페이지네이션은 **아직 적용되지 않았습니다** — 목록 화면의 "더 보기"는 비활성 플레이스홀더 상태입니다(#155, #88에서 v1.1로 이관).
 
 ---
 
@@ -390,6 +394,8 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | 014_promo_optional.sql | 013의 필수 CHECK 제거 — 홍보글 자유화(#79) |
 | 015_board_posts_promo_album_index.sql | promo+album_id 부분 인덱스 추가, 조회 성능용(#100) |
 | 016_board_posts_promo_manual_artist.sql | artist_id 또는 artist_name_text 필수로 재도입 — 팀 수기 입력 허용(#116) |
+| 017_comments_gallery_post.sql | comments target_type CHECK에 `gallery_post` 추가 — 갤러리 글 댓글(#147) |
+| 018_gallery_post_likes.sql | likes target_type CHECK에 `gallery_post` 추가 + `gallery_posts.like_count` + `sync_like_count()` 갤러리 분기(#150, #104 해소) |
 
 > 마이그레이션은 앞으로만 쌓는 방식 유지(013을 수정하지 않고 014로 되돌림 — 유령 마이그레이션 방지 원칙, CLAUDE.md).
 
@@ -403,10 +409,10 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 |---|---|---|---|
 | `notifications` | 팔로우/댓글/업데이트 발생 시 알림 적재 | 테이블 없음. `/notifications` 라우트는 빈 상태 스텁만 렌더 | #128 |
 | role / 관리자 권한 | `profiles.is_admin`, 관리자 전용 RLS(앨범 보정·공지·요청 승인) | 컬럼·정책 전부 없음 | #125 |
-| 키셋 커서 페이지네이션 | offset 금지, (created_at, id) 커서 | 목록 화면 "더 보기"가 비활성 플레이스홀더 | #88 |
+| 키셋 커서 페이지네이션 | offset 금지, (created_at, id) 커서 | 목록 화면 "더 보기"가 비활성 플레이스홀더 | #155 |
 | `albums.artist_name` ↔ `artists` 자동 동기화 | — (기획 문서엔 FK로 이미 연결된 것처럼 가정) | 자유 텍스트라 자동 동기화 없음, 매칭 갭 22% | #101 |
-| 갤러리 게시글 좋아요 | `likes.target_type`에 갤러리 포함 가정 | 스키마 없어 항상 0 | #104 |
+| 갤러리 글 삭제 시 댓글/좋아요 정리 | `board_posts`와 동일한 삭제 정합성 가정 | `gallery_posts`엔 009 같은 정리 트리거 없음. 삭제 UI가 없어 현재 고아 데이터는 안 생김 | #148 |
 | 갤러리 이미지 업로드 | — | Storage 연동 없음 | #124 |
 | 아카이브 장르/발매연도 필터 | — | `albums`에 해당 컬럼 자체 없음 (MusicBrainz 백필 선행 필요) | #130 |
-| `album_requests` | 앨범 등록 요청(검색 0 → 요청 → 관리자 승인) | 테이블 없음, 모달은 더미 제출(저장 안 됨). **관리자 확인 = Supabase 콘솔 수동으로 확정**(2026-09-24, 06 §5와 동일) — role 기반 관리자 UI는 v1.1. 콘솔 확인은 테이블 생성 + insert 연결 후부터 유효 | 저장 연결: 모달 `TODO(#88)` / 관리자 UI: #125 |
+| `album_requests` | 앨범 등록 요청(검색 0 → 요청 → 관리자 승인) | 테이블 없음, 모달은 더미 제출(저장 안 됨). **관리자 확인 = Supabase 콘솔 수동으로 확정**(2026-09-24, 06 §5와 동일) — role 기반 관리자 UI는 v1.1. 콘솔 확인은 테이블 생성 + insert 연결 후부터 유효 | 저장 연결: #156 / 관리자 UI: #125 |
 | Spotify 연동 전반 | 앨범/아티스트 임포트, `spotify_id`/`source`/`is_verified` | 전면 폐기, MusicBrainz로 대체 | — |
