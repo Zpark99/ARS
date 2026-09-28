@@ -104,7 +104,7 @@ export function TeamGalleryClient({
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-title text-text">{teamName} 갤러리</h1>
         <div className="flex items-center gap-2">
-          <SubscribeButton isLoggedIn={isLoggedIn} />
+          <SubscribeButton />
           <Button variant="ghost" size="sm" onClick={handleWriteClick}>
             {isLoggedIn ? (isWriting ? "취소" : "글쓰기") : "글쓰기 🔒"}
           </Button>
