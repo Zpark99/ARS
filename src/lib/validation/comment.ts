@@ -1,5 +1,5 @@
 // lib/validation/comment.ts
-// comments 테이블의 CHECK(char_length(content) <= 500), CHECK(target_type IN ('album','post'))
+// comments 테이블의 CHECK(char_length(content) <= 500), CHECK(target_type IN ('album','post','gallery_post'))
 // 제약과 동일한 규칙을 DB 호출 전에 앱 레벨에서 먼저 검증.
 import type { CommentTargetType } from "@/types/album";
 
@@ -16,5 +16,5 @@ export function isValidComment(content: unknown): content is string {
 export function isValidCommentTargetType(
   targetType: unknown
 ): targetType is CommentTargetType {
-  return targetType === "album" || targetType === "post";
+  return targetType === "album" || targetType === "post" || targetType === "gallery_post";
 }

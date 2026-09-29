@@ -1,15 +1,17 @@
 // app/gallery/[artistId]/[postId]/page.tsx
-// 갤러리 글 상세 (#118 신설 → #120 브레드크럼/공유 보강).
+// 갤러리 글 상세 (#118 신설 → #120 브레드크럼/공유 보강 → #147 댓글 추가 → #150 좋아요 추가).
 // 반응 탭(ReactionTab)과 동일한 패턴: 닉네임 조인 없이 user_id 앞 8자리만 표시.
-// 좋아요·댓글은 스키마 미지원(좋아요 #104, 댓글은 comments.target_type CHECK가
-// album/post만 허용 - gallery_posts는 별도 테이블이라 매핑 불가)이라 이번 스코프 제외.
-// v1.1에서 스키마 확장과 함께 다룬다. 조회수·이미지도 컬럼 자체가 없어 동일하게 제외.
+// 댓글은 QA와 동일한 BoardCommentSection 재사용, target_type='gallery_post'(#147).
+// 좋아요도 QA와 동일한 BoardPostLikeButton 재사용, target_type='gallery_post'(#150).
+// 조회수·이미지는 컬럼 자체가 없어 제외.
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { isValidUUID } from "@/lib/validation/like";
 import { SharePostButton } from "@/components/gallery/SharePostButton";
+import BoardCommentSection from "@/components/board/BoardCommentSection";
+import BoardPostLikeButton from "@/components/board/BoardPostLikeButton";
 import type { GalleryPostFlag } from "@/components/cards/GalleryRow";
 
 const CATEGORY_LABEL: Record<GalleryPostFlag, string> = {
@@ -50,7 +52,7 @@ export default async function GalleryPostPage({
 
   const supabase = await createClient();
 
-  const [artistResult, postResult] = await Promise.all([
+  const [artistResult, postResult, authResult] = await Promise.all([
     supabase.from("artists").select("id, name").eq("id", artistId).maybeSingle(),
     supabase
       .from("gallery_posts")
@@ -58,6 +60,7 @@ export default async function GalleryPostPage({
       .eq("id", postId)
       .eq("artist_id", artistId)
       .maybeSingle(),
+    supabase.auth.getUser(),
   ]);
 
   if (!artistResult.data) notFound();
@@ -68,6 +71,7 @@ export default async function GalleryPostPage({
 
   const post = postResult.data as unknown as GalleryPostRow;
   const artistName = artistResult.data.name;
+  const currentUserId = authResult.data.user?.id ?? null;
 
   return (
     <div className="mx-auto flex max-w-[720px] flex-col gap-4 px-4 py-6 md:px-6">
@@ -91,9 +95,11 @@ export default async function GalleryPostPage({
         <p className="mt-4 whitespace-pre-wrap break-words text-body leading-relaxed text-text">
           {post.content}
         </p>
-        <div className="mt-4 flex items-center justify-end border-t border-border pt-3">
+        <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+          <BoardPostLikeButton postId={post.id} currentUserId={currentUserId} targetType="gallery_post" />
           <SharePostButton />
         </div>
+        <BoardCommentSection postId={post.id} currentUserId={currentUserId} targetType="gallery_post" />
       </div>
     </div>
   );

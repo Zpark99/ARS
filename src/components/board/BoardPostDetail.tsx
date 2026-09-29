@@ -4,6 +4,7 @@
 // 아티스트/앨범 표시는 promo에만 값이 있고 qa/updates는 항상 null이라 그대로 둬도 안전.
 // comments.target_type='post'/likes target_type='post'는 board_posts 공통이라
 // BoardCommentSection·BoardPostLikeButton을 boardType 무관하게 재사용.
+// 공유 버튼(SharePostButton)은 순수 클라이언트 동작이라 스키마 무관하게 추가(#150).
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -12,6 +13,7 @@ import { isValidUUID } from "@/lib/validation/like";
 import type { BoardType } from "@/lib/validation/board";
 import BoardPostLikeButton from "@/components/board/BoardPostLikeButton";
 import BoardCommentSection from "@/components/board/BoardCommentSection";
+import { SharePostButton } from "@/components/gallery/SharePostButton";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("ko-KR", {
@@ -99,6 +101,7 @@ export async function BoardPostDetail({
         </p>
         <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
           <BoardPostLikeButton postId={post.id} currentUserId={currentUserId} />
+          <SharePostButton />
         </div>
         <BoardCommentSection postId={post.id} currentUserId={currentUserId} />
       </div>

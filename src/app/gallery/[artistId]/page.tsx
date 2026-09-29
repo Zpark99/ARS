@@ -22,6 +22,7 @@ type GalleryPostRow = {
   user_id: string;
   created_at: string;
   post_flag: GalleryPostFlag;
+  like_count: number;
 };
 
 export default async function TeamGalleryPage({
@@ -48,7 +49,7 @@ export default async function TeamGalleryPage({
 
   const { data: postRows, error } = await supabase
     .from("gallery_posts")
-    .select("id, title, user_id, created_at, post_flag")
+    .select("id, title, user_id, created_at, post_flag, like_count")
     .eq("artist_id", artistId)
     .order("created_at", { ascending: false })
     .limit(50);
@@ -61,7 +62,7 @@ export default async function TeamGalleryPage({
     id: p.id,
     title: p.title,
     author: `사용자 ${p.user_id.slice(0, 8)}`,
-    likeCount: 0, // gallery_posts는 아직 좋아요 스키마 없음 (#104 백로그)
+    likeCount: p.like_count,
     time: formatDate(p.created_at),
     flag: p.post_flag,
   }));
