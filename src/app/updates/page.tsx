@@ -1,7 +1,7 @@
 // app/updates/page.tsx
 // 업데이트 게시판 목록 - 홍보/갤러리와 동일한 행 목록 양식으로 통일(#127).
-// "관리자 작성 공간"이지만 role 체계가 없어 글쓰기 버튼은 임시 숨김(canWrite=false,
-// #125 공지 관리자 권한과 동일 원인 - v1.1에서 role 생기면 함께 해결).
+// 관리자 작성 공간 - 글쓰기는 is_admin()만 노출(#125). DB에서도 RLS board_posts_insert_own이
+// board_type='updates'를 관리자로 제한하므로, 이 UI 게이트는 이중 방어의 겉면.
 
 import { BoardListClient } from "@/components/board/BoardListClient";
 import { createClient } from "@/lib/supabase/server";
@@ -28,6 +28,9 @@ export default async function UpdatesPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // is_admin()은 SECURITY DEFINER 함수(019). authenticated만 EXECUTE라 비로그인은 호출 생략.
+  const isAdmin = user ? (await supabase.rpc("is_admin")).data === true : false;
 
   const { data, error } = await supabase
     .from("board_posts")
@@ -74,7 +77,7 @@ export default async function UpdatesPage() {
       posts={posts}
       isLoggedIn={!!user}
       currentUserId={user?.id ?? null}
-      canWrite={false}
+      canWrite={isAdmin}
     />
   );
 }
