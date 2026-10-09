@@ -93,6 +93,7 @@ DB에 직접 SQL 실행 후 파일 누락 금지 (유령 마이그레이션 재�
 
 - develop에 기능이 충분히 쌓이고 안정화됐을 때만.
 - `gh pr create --base main --head develop` 로 승격 PR 생성.
+- **승격 머지는 merge commit(`gh pr merge --merge`). squash 금지** — squash는 main에 develop이 모르는 커밋을 만들어 계보를 끊고, 다음 승격에서 add/add 충돌을 낸다(#161→#167 재발, #168). 기능→develop(5단계)은 기존대로 squash.
 - **반드시 별도로 명시적 질문:**
     
     > "develop → main 승격은 프로덕션(Vercel) 배포로 이어집니다. 진행할까요?"
