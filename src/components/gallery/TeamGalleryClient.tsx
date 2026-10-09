@@ -3,6 +3,8 @@
 // 글쓰기는 BoardClient.handleCreate와 동일한 패턴(client insert + error 체크 +
 // state 반영)으로 gallery_posts에 연결(#114). 폼은 BoardPostForm 재사용(artists 없이 —
 // promo 전용 팀/앨범 선택 없이 제목/내용만).
+// 공지(notice) 지정은 관리자만 - 토글을 isAdmin일 때만 노출(#125). 일반 유저는 토글이
+// 없어 기본 normal, DB에서도 RLS gallery_insert_own/update_own이 notice를 관리자로 제한.
 
 "use client";
 
@@ -31,18 +33,21 @@ export function TeamGalleryClient({
   posts: initialPosts,
   isLoggedIn,
   currentUserId,
+  isAdmin,
 }: {
   teamName: string;
   artistId: string;
   posts: GalleryRowData[];
   isLoggedIn: boolean;
   currentUserId: string | null;
+  isAdmin: boolean;
 }) {
   const router = useRouter();
   const [filter, setFilter] = useState<FilterKey>("all");
   const [query, setQuery] = useState("");
   const [posts, setPosts] = useState(initialPosts);
   const [isWriting, setIsWriting] = useState(false);
+  const [asNotice, setAsNotice] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
@@ -74,6 +79,7 @@ export function TeamGalleryClient({
         artist_name: teamName,
         title,
         content,
+        post_flag: asNotice ? "notice" : "normal",
       })
       .select("id, title, user_id, created_at, post_flag")
       .single();
@@ -96,6 +102,7 @@ export function TeamGalleryClient({
       },
       ...prev,
     ]);
+    setAsNotice(false);
     setIsWriting(false);
   };
 
@@ -113,6 +120,17 @@ export function TeamGalleryClient({
 
       {isWriting && (
         <div className="rounded-md border border-border bg-surface p-4">
+          {isAdmin && (
+            <label className="mb-3 flex items-center gap-2 text-caption text-text">
+              <input
+                type="checkbox"
+                checked={asNotice}
+                onChange={(e) => setAsNotice(e.target.checked)}
+                className="h-4 w-4 accent-accent"
+              />
+              공지로 등록 (관리자)
+            </label>
+          )}
           <BoardPostForm onSubmit={handleCreate} onCancel={() => setIsWriting(false)} submitLabel="작성" />
           {submitError && <p className="mt-2 text-xs text-red-500">{submitError}</p>}
         </div>
