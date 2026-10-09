@@ -43,3 +43,8 @@ next-env.d.ts
 
 # claude code scratch (CLAUDE.md 4단계 임시 커밋 메시지용)
 /scratchpad/
+
+# playwright (#65) — e2e/.auth엔 테스트 계정 세션 토큰이 들어감
+/e2e/.auth/
+/test-results/
+/playwright-report/
