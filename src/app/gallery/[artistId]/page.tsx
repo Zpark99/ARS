@@ -47,6 +47,11 @@ export default async function TeamGalleryPage({
 
   if (!artistResult.data) notFound();
 
+  // 공지(post_flag='notice') 지정은 관리자만 (#125). RLS gallery_insert_own이 DB에서도 막음.
+  const isAdmin = authResult.data.user
+    ? (await supabase.rpc("is_admin")).data === true
+    : false;
+
   const { data: postRows, error } = await supabase
     .from("gallery_posts")
     .select("id, title, user_id, created_at, post_flag, like_count")
@@ -74,6 +79,7 @@ export default async function TeamGalleryPage({
       posts={posts}
       isLoggedIn={!!authResult.data.user}
       currentUserId={authResult.data.user?.id ?? null}
+      isAdmin={isAdmin}
     />
   );
 }
