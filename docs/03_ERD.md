@@ -21,6 +21,7 @@
 | v1.0 (본 문서) | 2026-09-10 | 라이브 DB 전수 조회 기준으로 전면 재작성. 레포(`docs/03_ERD.md`)로 이관 |
 | v1.0.1 | 2026-09-24 | `album_requests` 관리자 확인 = Supabase 콘솔 수동 결정 반영 (#153) |
 | v1.0.2 | 2026-09-26 | 017/018(갤러리 댓글·좋아요, #147/#150) 라이브 DB 조회 기준 반영. 로드맵 추적 번호 갱신(#88 → #155/#156, #104 해소, #148 추가) (#157) |
+| v1.0.3 | 2026-10-09 | role(관리자) 체계 도입분 반영 — `profiles.is_admin` 컬럼, `public.is_admin()` 함수, 019/020 마이그레이션, `board_posts`/`gallery_posts` RLS 정책 4개 교체. 라이브 DB 조회 기준 (#125 — 마이그레이션 적용 완료, UI는 PR #164 머지 전) |
 
 ---
 
@@ -76,6 +77,7 @@ erDiagram
     text avatar_url "nullable"
     text bio "NOT NULL default ''"
     timestamptz created_at
+    bool is_admin "NOT NULL default false (019)"
   }
   artists {
     uuid id PK
@@ -172,8 +174,11 @@ erDiagram
 | avatar_url | text | nullable |
 | bio | text | NOT NULL, default `''` |
 | created_at | timestamptz | default now() |
+| is_admin | boolean | NOT NULL, default `false` (019) |
 
-> 기획 문서의 `username`(UNIQUE)·`is_admin` 컬럼은 **실제로 존재하지 않습니다**. 닉네임 중복 제약 없음, role/관리자 권한 체계 자체가 없음(#125, 로드맵).
+> 기획 문서의 `username`(UNIQUE) 컬럼은 **실제로 존재하지 않습니다** — 컬럼명은 `nickname`이고 중복 제약도 없습니다.
+> `is_admin`은 019(2026-10-08)로 **추가됐습니다**(#125). 판정은 `public.is_admin()` — `SECURITY DEFINER` · `STABLE` · `search_path=public` 고정, EXECUTE 권한은 `postgres`/`authenticated`/`service_role`만(`anon`·`PUBLIC` 없음). 등급이 일반/관리자 둘뿐이라 `role text` enum 대신 boolean 1컬럼. 관리자 지정은 **Supabase 콘솔 수동 `UPDATE`**(운영자 1명, 코드 경로 없음 — #153과 같은 방식). 이 컬럼을 쓰는 RLS는 6장 참조.
+> 현재 상태: 019/020은 라이브 DB 적용 완료(단일 Supabase 프로젝트), UI 게이트는 **PR #164 머지 전**.
 
 ### 3.2 `artists`
 
@@ -319,7 +324,7 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | `album_requests` | 앨범 등록 요청 테이블 (신규 계획) | 테이블 없음. 요청 모달(`AlbumRequestModal`)은 insert 없는 더미 제출 | **보류(폐기 아님)** — 관리자 확인은 콘솔 수동으로 확정, 9장 참조 |
 | `notifications` | 알림 테이블 (신규 계획) | 테이블 없음. `/notifications` 라우트는 있으나 빈 상태만 렌더하는 스텁 | **로드맵 이동** (#128) |
 | `monthly_ranking` (VIEW) | 월간 TOP/HOT 통합 뷰 | 이름 다름 + 2개로 분리: `popular_albums`(전체 인기), `monthly_artists`(이달 아티스트) | **수정** |
-| `profiles.username`/`is_admin` | UNIQUE username, is_admin 관리자 플래그 | 컬럼명은 `nickname`(UNIQUE 아님), `is_admin` 컬럼 자체 없음 | **수정** |
+| `profiles.username`/`is_admin` | UNIQUE username, is_admin 관리자 플래그 | 컬럼명은 `nickname`(UNIQUE 아님). `is_admin`은 019(2026-10-08)로 **실재** | **부분 해소** — username은 여전히 다름, is_admin은 도입됨(#125) |
 | `board_posts.artist_name_text` | 문서에 없음(v0.3 이후 변경) | 실재(#116, promo 팀 수기 입력) | **추가 반영 필요** |
 | promo 팀 연결 필수 여부 | 014에서 필수 CHECK 제거 → 완전 자유 | 016에서 "artist_id 또는 artist_name_text 필수"로 재도입 | **수정** — 완전 자유화 아님 |
 | `idx_board_posts_promo_album` | 문서에 없음 | 실재(#100, promo+album_id 부분 인덱스) | **추가 반영 필요** |
@@ -336,8 +341,8 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 |---|---|---|---|---|
 | albums | 공개(anon) | 로그인 유저 전체 허용 | 없음 | 없음 |
 | artists | 공개(anon) | 없음 | 없음 | 없음 |
-| board_posts | 공개(anon) | 본인만(`auth.uid()=user_id`) | 본인만 | 본인만 |
-| gallery_posts | 공개(anon) | 본인만 | 본인만 | 본인만 |
+| board_posts | 공개(anon) | 본인만(`auth.uid()=user_id`) + `board_type='updates'`는 `is_admin()`만 (020) | 본인만 + **WITH CHECK** 동일 조건 (020) | 본인만 |
+| gallery_posts | 공개(anon) | 본인만 + `post_flag='notice'`는 `is_admin()`만 (020) | 본인만 + **WITH CHECK** 동일 조건 (020) | 본인만 |
 | comments | 공개(anon) | 본인만 | 없음 | 본인만 |
 | likes | 공개(anon) | 본인만 | 없음 | 본인만 |
 | follows | 공개(anon) | 본인만(`follower_id`) | 없음 | 본인만 |
@@ -345,7 +350,17 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | profiles | 공개(anon) | 없음(트리거로만 생성) | 본인만 | 없음 |
 | ratings | 공개(anon) | 본인만 | 본인만(+WITH CHECK 소유권 이전 차단) | 본인만 |
 
-> 기획 문서가 말한 "관리자만 쓰기"(`is_admin` 기반 artists 보정, update 게시판 관리자 전용) 정책은 **실제로 없습니다** — role 체계 자체가 없어(#125) 관리자 전용 쓰기 정책도 존재하지 않습니다.
+**관리자 전용 쓰기 (020, #125) — `pg_policies` 실측 `with_check`**
+
+| 정책 | `with_check` |
+|---|---|
+| `board_posts_insert_own` / `board_posts_update_own` | `(auth.uid() = user_id) AND ((board_type <> 'updates') OR is_admin())` |
+| `gallery_insert_own` / `gallery_update_own` | `(auth.uid() = user_id) AND ((post_flag <> 'notice') OR is_admin())` |
+
+> UPDATE 정책의 `WITH CHECK`는 020에서 **신설**됐습니다. 그전엔 `USING`만 있어 `USING`이 신규 행 검사를 겸했고, 그 때문에 **본인 글의 `board_type`/`post_flag` 바꿔치기가 가능**했습니다(비관리자 JWT로 뚫림 실증 후 차단, 검증 행은 트랜잭션 롤백).
+> 같은 cmd의 PERMISSIVE 정책은 OR로 합쳐지므로 020은 정책을 **추가가 아니라 교체**합니다(단일 트랜잭션으로 DROP~CREATE 틈 제거).
+> `board_type` **전면** 불변은 아닙니다 — `qa ↔ promo` 전환은 여전히 허용되고 강제 트리거도 없습니다(#43 미해소).
+> 아직 없는 관리자 정책: `artists`/`albums` 보정(UPDATE 정책 자체 없음 — 보안 구멍이 아니라 기능 공백, `albums` INSERT는 #117), 앨범 등록 요청 승인(`album_requests` 테이블 미존재, 9장).
 
 ---
 
@@ -396,6 +411,8 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | 016_board_posts_promo_manual_artist.sql | artist_id 또는 artist_name_text 필수로 재도입 — 팀 수기 입력 허용(#116) |
 | 017_comments_gallery_post.sql | comments target_type CHECK에 `gallery_post` 추가 — 갤러리 글 댓글(#147) |
 | 018_gallery_post_likes.sql | likes target_type CHECK에 `gallery_post` 추가 + `gallery_posts.like_count` + `sync_like_count()` 갤러리 분기(#150, #104 해소) |
+| 019_profiles_is_admin.sql | `profiles.is_admin` 컬럼 + `public.is_admin()` 헬퍼(SECURITY DEFINER·STABLE·`search_path` 고정) — 관리자 판정 기반(#125) |
+| 020_admin_rls_policies.sql | board_posts·gallery_posts의 INSERT·UPDATE 정책 4개 **교체** — updates 쓰기/notice 지정을 `is_admin()`으로 제한 + UPDATE `WITH CHECK` 신설(바꿔치기 차단)(#125) |
 
 > 마이그레이션은 앞으로만 쌓는 방식 유지(013을 수정하지 않고 014로 되돌림 — 유령 마이그레이션 방지 원칙, CLAUDE.md).
 
@@ -408,11 +425,23 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | 항목 | 기획 당시 계획 | 현재 상태 | 추적 |
 |---|---|---|---|
 | `notifications` | 팔로우/댓글/업데이트 발생 시 알림 적재 | 테이블 없음. `/notifications` 라우트는 빈 상태 스텁만 렌더 | #128 |
-| role / 관리자 권한 | `profiles.is_admin`, 관리자 전용 RLS(앨범 보정·공지·요청 승인) | 컬럼·정책 전부 없음 | #125 |
 | 키셋 커서 페이지네이션 | offset 금지, (created_at, id) 커서 | 목록 화면 "더 보기"가 비활성 플레이스홀더 | #155 |
 | `albums.artist_name` ↔ `artists` 자동 동기화 | — (기획 문서엔 FK로 이미 연결된 것처럼 가정) | 자유 텍스트라 자동 동기화 없음, 매칭 갭 22% | #101 |
 | 갤러리 글 삭제 시 댓글/좋아요 정리 | `board_posts`와 동일한 삭제 정합성 가정 | `gallery_posts`엔 009 같은 정리 트리거 없음. 삭제 UI가 없어 현재 고아 데이터는 안 생김 | #148 |
 | 갤러리 이미지 업로드 | — | Storage 연동 없음 | #124 |
 | 아카이브 장르/발매연도 필터 | — | `albums`에 해당 컬럼 자체 없음 (MusicBrainz 백필 선행 필요) | #130 |
-| `album_requests` | 앨범 등록 요청(검색 0 → 요청 → 관리자 승인) | 테이블 없음, 모달은 더미 제출(저장 안 됨). **관리자 확인 = Supabase 콘솔 수동으로 확정**(2026-09-24, 06 §5와 동일) — role 기반 관리자 UI는 v1.1. 콘솔 확인은 테이블 생성 + insert 연결 후부터 유효 | 저장 연결: #156 / 관리자 UI: #125 |
-| Spotify 연동 전반 | 앨범/아티스트 임포트, `spotify_id`/`source`/`is_verified` | 전면 폐기, MusicBrainz로 대체 | — |
+| `album_requests` | 앨범 등록 요청(검색 0 → 요청 → 관리자 승인) | 테이블 없음, 모달은 더미 제출(저장 안 됨). **관리자 확인 = Supabase 콘솔 수동으로 확정**(2026-09-24, 06 §5와 동일). role 체계는 #125로 도입됐지만(`is_admin`) 요청 승인 화면은 테이블 신설 + insert 연결 후의 과제 | 저장 연결: #156 / 관리자 UI: #125 |
+| Spotify 연동 전반 | 앨범/아티스트 임포트, `spotify_id`/`source`/`is_verified` | 전면 폐기, MusicBrainz가 **신원 백본**. 2026-10-08 검토 결론(#151): 교체 없이 **커버·메타 보강 레이어**로만 재도입 검토(링크백·로고 출처 표시 의무 선행), 구현은 v1.1 | #151 |
+
+### 해소 — role / 관리자 권한 (2026-10-08, #125)
+
+이 표에 `컬럼·정책 전부 없음`으로 적혀 있던 항목입니다. 현재 상태를 조각별로 쓰면:
+
+| 조각 | 상태 |
+|---|---|
+| `profiles.is_admin` 컬럼 + `public.is_admin()` (019) | 라이브 DB **적용 완료** (3장) |
+| `board_posts`/`gallery_posts` 관리자 전용 RLS (020) | 라이브 DB **적용 완료** (6장) |
+| UI 게이트(`/updates` 글쓰기, 갤러리 공지 토글) | 코드 완성 · **PR #164 머지 전** → 프로덕션 코드에는 아직 없음 |
+| 앨범 보정(`artists`/`albums`) · 요청 승인 관리자 정책 | 범위 밖, 미구현 |
+
+> 단일 Supabase 프로젝트라 019/020은 적용 즉시 프로덕션 DB에 반영됩니다. 즉 **DB는 막혀 있고 UI만 머지 전**인 상태입니다.
