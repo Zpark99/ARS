@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { anonClient } from "./helpers";
+import { openGalleryArtistId } from "./helpers";
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
@@ -35,21 +35,13 @@ test("/album/mbid-1 → 404 (#109 더미 식별자 가드)", async ({ page }) =>
   expect(res?.status()).toBe(404);
 });
 
-test("비로그인: /updates 글쓰기 없음 · 갤러리 공지 토글 없음 (#125)", async ({ page }) => {
+test("비로그인: /updates 글쓰기 없음 · 갤러리 글쓰기는 로그인으로 (#125)", async ({ page }) => {
   await page.goto("/updates");
   await expect(page.getByRole("heading", { name: "업데이트" })).toBeVisible();
   await expect(page.getByRole("button", { name: /글쓰기/ })).toHaveCount(0);
 
-  const { data: artist } = await anonClient()
-    .from("artists")
-    .select("id")
-    .eq("is_gallery_open", true)
-    .limit(1)
-    .single();
-  expect(artist?.id, "열린 갤러리가 DB에 없음").toBeTruthy();
-  await page.goto(`/gallery/${artist!.id}`);
-  await expect(page.getByText("공지로 등록")).toHaveCount(0);
-  // 비로그인 글쓰기는 폼 대신 로그인으로 보낸다 — 토글이 뜰 경로 자체가 없음
+  await page.goto(`/gallery/${await openGalleryArtistId()}`);
+  // 비로그인 글쓰기는 폼 대신 로그인으로 보낸다
   await page.getByRole("button", { name: "글쓰기 🔒" }).first().click();
   await expect(page).toHaveURL(/\/login$/);
 });

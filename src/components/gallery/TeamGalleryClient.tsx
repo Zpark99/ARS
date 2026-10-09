@@ -3,8 +3,9 @@
 // 글쓰기는 BoardClient.handleCreate와 동일한 패턴(client insert + error 체크 +
 // state 반영)으로 gallery_posts에 연결(#114). 폼은 BoardPostForm 재사용(artists 없이 —
 // promo 전용 팀/앨범 선택 없이 제목/내용만).
-// 공지(notice) 지정은 관리자만 - 토글을 isAdmin일 때만 노출(#125). 일반 유저는 토글이
-// 없어 기본 normal, DB에서도 RLS gallery_insert_own/update_own이 notice를 관리자로 제한.
+// 글 종류는 작성한 탭으로 결정(#172, 공지 토글 제거): 전체=normal(로그인 유저),
+// 공지=notice(관리자만 — DB도 020 RLS가 notice를 관리자로 제한, #125),
+// 개념글=작성 불가(좋아요로 선정되는 대상. concept 직접 insert 차단은 #126 결정 후 RLS로).
 
 "use client";
 
@@ -27,6 +28,12 @@ const FILTERS = [
 
 type FilterKey = (typeof FILTERS)[number]["key"];
 
+const EMPTY_TEXT: Record<FilterKey, string> = {
+  all: "첫 글의 주인공이 되세요",
+  concept: "아직 개념글이 없어요",
+  notice: "아직 공지가 없어요",
+};
+
 export function TeamGalleryClient({
   teamName,
   artistId,
@@ -47,7 +54,6 @@ export function TeamGalleryClient({
   const [query, setQuery] = useState("");
   const [posts, setPosts] = useState(initialPosts);
   const [isWriting, setIsWriting] = useState(false);
-  const [asNotice, setAsNotice] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
@@ -59,6 +65,16 @@ export function TeamGalleryClient({
     });
   }, [posts, filter, query]);
 
+  // null = 이 탭에선 글쓰기 버튼·CTA 자체를 안 보임
+  const writeFlag = filter === "all" ? "normal" : filter === "notice" && isAdmin ? "notice" : null;
+
+  const selectFilter = (key: FilterKey) => {
+    setFilter(key);
+    // 다른 탭에서 연 폼이 남아 엉뚱한 종류로 등록되지 않게 탭 전환 시 닫음
+    setIsWriting(false);
+    setSubmitError(null);
+  };
+
   const handleWriteClick = () => {
     if (!isLoggedIn) {
       router.push("/login");
@@ -69,7 +85,7 @@ export function TeamGalleryClient({
   };
 
   const handleCreate = async (title: string, content: string) => {
-    if (!currentUserId || !isValidBoardTitle(title) || !isValidBoardContent(content)) return;
+    if (!writeFlag || !currentUserId || !isValidBoardTitle(title) || !isValidBoardContent(content)) return;
     const supabase = createClient();
     const { data, error } = await supabase
       .from("gallery_posts")
@@ -79,7 +95,7 @@ export function TeamGalleryClient({
         artist_name: teamName,
         title,
         content,
-        post_flag: asNotice ? "notice" : "normal",
+        post_flag: writeFlag,
       })
       .select("id, title, user_id, created_at, post_flag")
       .single();
@@ -102,7 +118,6 @@ export function TeamGalleryClient({
       },
       ...prev,
     ]);
-    setAsNotice(false);
     setIsWriting(false);
   };
 
@@ -112,25 +127,17 @@ export function TeamGalleryClient({
         <h1 className="text-title text-text">{teamName} 갤러리</h1>
         <div className="flex items-center gap-2">
           <SubscribeButton />
-          <Button variant="ghost" size="sm" onClick={handleWriteClick}>
-            {isLoggedIn ? (isWriting ? "취소" : "글쓰기") : "글쓰기 🔒"}
-          </Button>
+          {writeFlag && (
+            <Button variant="ghost" size="sm" onClick={handleWriteClick}>
+              {isLoggedIn ? (isWriting ? "취소" : "글쓰기") : "글쓰기 🔒"}
+            </Button>
+          )}
         </div>
       </div>
 
-      {isWriting && (
+      {isWriting && writeFlag && (
         <div className="rounded-md border border-border bg-surface p-4">
-          {isAdmin && (
-            <label className="mb-3 flex items-center gap-2 text-caption text-text">
-              <input
-                type="checkbox"
-                checked={asNotice}
-                onChange={(e) => setAsNotice(e.target.checked)}
-                className="h-4 w-4 accent-accent"
-              />
-              공지로 등록 (관리자)
-            </label>
-          )}
+          {writeFlag === "notice" && <p className="mb-3 text-caption text-text-muted">공지로 등록돼요</p>}
           <BoardPostForm onSubmit={handleCreate} onCancel={() => setIsWriting(false)} submitLabel="작성" />
           {submitError && <p className="mt-2 text-xs text-red-500">{submitError}</p>}
         </div>
@@ -143,7 +150,7 @@ export function TeamGalleryClient({
               key={f.key}
               label={f.label}
               selected={filter === f.key}
-              onClick={() => setFilter(f.key)}
+              onClick={() => selectFilter(f.key)}
             />
           ))}
         </div>
@@ -154,10 +161,12 @@ export function TeamGalleryClient({
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="text-body text-text-muted">첫 글의 주인공이 되세요</p>
-          <Button variant="ghost" onClick={handleWriteClick}>
-            {isLoggedIn ? "글쓰기" : "글쓰기 🔒"}
-          </Button>
+          <p className="text-body text-text-muted">{EMPTY_TEXT[filter]}</p>
+          {writeFlag && (
+            <Button variant="ghost" onClick={handleWriteClick}>
+              {isLoggedIn ? "글쓰기" : "글쓰기 🔒"}
+            </Button>
+          )}
         </div>
       ) : (
         <div className="rounded-md border border-border bg-surface px-3">
