@@ -23,6 +23,13 @@ export function anonClient(): SupabaseClient {
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } });
 }
 
+// 실제 존재하는 열린 갤러리 하나(더미 id 금지 — #49/#96)
+export async function openGalleryArtistId(): Promise<string> {
+  const { data } = await anonClient().from("artists").select("id").eq("is_gallery_open", true).limit(1).single();
+  if (!data?.id) throw new Error("열린 갤러리가 DB에 없음");
+  return data.id;
+}
+
 // 테스트 계정으로 로그인한 클라이언트. 관리자 계정이면 즉시 중단 — E2E는 관리자 계정을 쓰지 않는다.
 export async function testUserClient(): Promise<{ client: SupabaseClient; userId: string }> {
   const client = anonClient();
