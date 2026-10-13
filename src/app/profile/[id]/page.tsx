@@ -112,7 +112,7 @@ export default async function ProfilePage({
       .order('created_at', { ascending: false }),
     supabase
       .from('gallery_posts')
-      .select('id, artist_name, title, created_at')
+      .select('id, artist_id, artist_name, title, created_at')
       .eq('user_id', id)
       .order('created_at', { ascending: false }),
   ])

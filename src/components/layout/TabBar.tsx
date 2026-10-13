@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "@/components/auth/LogoutButton";
@@ -32,8 +32,12 @@ export function TabBar({ user = null }: TabBarProps) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
 
-  // 라우트 이동 시 열려있던 더보기 시트를 닫음
-  useEffect(() => setMoreOpen(false), [pathname]);
+  // 라우트 이동 시 열려있던 더보기 시트를 닫음 — effect 대신 렌더 중 이전 경로와 비교(react-hooks/set-state-in-effect)
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setMoreOpen(false);
+  }
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);

@@ -45,3 +45,13 @@ test("비로그인: /updates 글쓰기 없음 · 갤러리 글쓰기는 로그�
   await page.getByRole("button", { name: "글쓰기 🔒" }).first().click();
   await expect(page).toHaveURL(/\/login$/);
 });
+
+test("푸터: 문의 → /qa 도달, 이용약관·href=# 링크 없음 (#111)", async ({ page }) => {
+  await page.goto("/");
+  const footer = page.getByRole("contentinfo");
+  await expect(footer.locator('a[href="#"]')).toHaveCount(0);
+  await expect(footer.getByRole("link", { name: "이용약관" })).toHaveCount(0);
+  await footer.getByRole("link", { name: "문의", exact: true }).click();
+  await expect(page).toHaveURL(/\/qa$/);
+  await expect(page.getByRole("heading", { name: "QA", exact: true })).toBeVisible();
+});
