@@ -60,12 +60,18 @@ export default function BoardPostForm({
     setAlbums([])
   }
 
-  useEffect(() => {
+  // 팀 선택이 풀리면 앨범 목록·입력도 비움 — effect 대신 렌더 중 이전 값과 비교(react-hooks/set-state-in-effect)
+  const [prevSearchName, setPrevSearchName] = useState(albumSearchName)
+  if (prevSearchName !== albumSearchName) {
+    setPrevSearchName(albumSearchName)
     if (!albumSearchName) {
       setAlbums([])
       setAlbumInput('')
-      return
     }
+  }
+
+  useEffect(() => {
+    if (!albumSearchName) return
     let cancelled = false
     // 수기 입력은 타이핑마다 바뀌니 살짝 디바운스, 검색형은 선택 즉시 확정된 값이라 바로 조회.
     const delay = artistMode === 'manual' ? 400 : 0

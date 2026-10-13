@@ -4,6 +4,7 @@
 // 댓글은 QA와 동일한 BoardCommentSection 재사용, target_type='gallery_post'(#147).
 // 좋아요도 QA와 동일한 BoardPostLikeButton 재사용, target_type='gallery_post'(#150).
 // 조회수·이미지는 컬럼 자체가 없어 제외.
+// 본인 글 수정·삭제는 board 상세와 같은 OwnerPostActions(#64). 갤러리 이동·글 종류 변경은 범위 밖(021 트리거로도 차단).
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -12,6 +13,7 @@ import { isValidUUID } from "@/lib/validation/like";
 import { SharePostButton } from "@/components/gallery/SharePostButton";
 import BoardCommentSection from "@/components/board/BoardCommentSection";
 import BoardPostLikeButton from "@/components/board/BoardPostLikeButton";
+import { OwnerPostActions } from "@/components/board/OwnerPostActions";
 import type { GalleryPostFlag } from "@/components/cards/GalleryRow";
 
 const CATEGORY_LABEL: Record<GalleryPostFlag, string> = {
@@ -87,14 +89,23 @@ export default async function GalleryPostPage({
         <span className="text-text">{CATEGORY_LABEL[post.post_flag]}</span>
       </nav>
       <div className="rounded-md border border-border bg-surface p-5">
-        <h1 className="text-subtitle font-semibold text-text">{post.title}</h1>
-        <div className="mt-1.5 flex items-center gap-2 text-caption text-text-muted">
-          <span>사용자 {post.user_id.slice(0, 8)}</span>
-          <span>{formatDate(post.created_at)}</span>
-        </div>
-        <p className="mt-4 whitespace-pre-wrap break-words text-body leading-relaxed text-text">
-          {post.content}
-        </p>
+        <OwnerPostActions
+          table="gallery_posts"
+          postId={post.id}
+          title={post.title}
+          content={post.content}
+          isOwner={currentUserId === post.user_id}
+          listHref={`/gallery/${artistId}`}
+        >
+          <h1 className="text-subtitle font-semibold text-text">{post.title}</h1>
+          <div className="mt-1.5 flex items-center gap-2 text-caption text-text-muted">
+            <span>사용자 {post.user_id.slice(0, 8)}</span>
+            <span>{formatDate(post.created_at)}</span>
+          </div>
+          <p className="mt-4 whitespace-pre-wrap break-words text-body leading-relaxed text-text">
+            {post.content}
+          </p>
+        </OwnerPostActions>
         <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
           <BoardPostLikeButton postId={post.id} currentUserId={currentUserId} targetType="gallery_post" />
           <SharePostButton />

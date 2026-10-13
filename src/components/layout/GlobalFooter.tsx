@@ -18,11 +18,8 @@ export function GlobalFooter() {
               패치내역
             </Link>
             <span aria-hidden="true">·</span>
-            <Link href="#" className="hover:text-text">
-              이용약관
-            </Link>
-            <span aria-hidden="true">·</span>
-            <Link href="#" className="hover:text-text">
+            {/* 문의는 QA 게시판으로(#111). 이용약관은 본문이 생기기 전까지 링크 자체를 두지 않음 */}
+            <Link href="/qa" className="hover:text-text">
               문의
             </Link>
           </nav>

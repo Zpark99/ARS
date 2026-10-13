@@ -40,7 +40,7 @@ export async function testUserClient(): Promise<{ client: SupabaseClient; userId
   return { client, userId: data.user.id };
 }
 
-// 테스트 계정이 만든 [E2E] 갤러리 글과 그 글의 댓글·좋아요를 지우고, 남은 행 수를 반환한다.
+// 테스트 계정이 만든 [E2E] 갤러리·QA 글과 그 글의 댓글·좋아요를 지우고, 남은 행 수를 반환한다.
 // gallery_posts엔 삭제 정리 트리거가 없어(#148) 댓글·좋아요를 먼저 지운다.
 export async function sweepE2ERows(): Promise<number> {
   if (!HAS_TEST_USER) return 0;
@@ -57,14 +57,17 @@ export async function sweepE2ERows(): Promise<number> {
     await client.from("likes").delete().eq("target_type", "gallery_post").in("target_id", ids);
     await client.from("gallery_posts").delete().in("id", ids);
   }
+  // [E2E] QA 글(#178) — 댓글·좋아요는 009 트리거가 정리
+  await client.from("board_posts").delete().eq("user_id", userId).like("title", `${E2E_PREFIX}%`);
   // 글에 안 묶인 [E2E] 댓글(글 생성 후 중단 등)까지 정리
   await client.from("comments").delete().eq("user_id", userId).like("content", `${E2E_PREFIX}%`);
 
-  const [{ count: postLeft }, { count: commentLeft }] = await Promise.all([
+  const [{ count: postLeft }, { count: boardLeft }, { count: commentLeft }] = await Promise.all([
     client.from("gallery_posts").select("id", { count: "exact", head: true }).like("title", `${E2E_PREFIX}%`),
+    client.from("board_posts").select("id", { count: "exact", head: true }).like("title", `${E2E_PREFIX}%`),
     client.from("comments").select("id", { count: "exact", head: true }).like("content", `${E2E_PREFIX}%`),
   ]);
   // local: 이 정리용 세션만 폐기. 기본값(global)이면 브라우저에 주입한 세션까지 같이 죽는다
   await client.auth.signOut({ scope: "local" });
-  return (postLeft ?? 0) + (commentLeft ?? 0);
+  return (postLeft ?? 0) + (boardLeft ?? 0) + (commentLeft ?? 0);
 }
