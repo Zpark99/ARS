@@ -5,6 +5,7 @@
 // comments.target_type='post'/likes target_type='post'는 board_posts 공통이라
 // BoardCommentSection·BoardPostLikeButton을 boardType 무관하게 재사용.
 // 공유 버튼(SharePostButton)은 순수 클라이언트 동작이라 스키마 무관하게 추가(#150).
+// 본인 글 수정·삭제는 OwnerPostActions(#178). 홍보 팀·앨범은 수정 범위 밖.
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -13,6 +14,7 @@ import { isValidUUID } from "@/lib/validation/like";
 import type { BoardType } from "@/lib/validation/board";
 import BoardPostLikeButton from "@/components/board/BoardPostLikeButton";
 import BoardCommentSection from "@/components/board/BoardCommentSection";
+import { OwnerPostActions } from "@/components/board/OwnerPostActions";
 import { SharePostButton } from "@/components/gallery/SharePostButton";
 
 function formatDate(iso: string): string {
@@ -78,27 +80,37 @@ export async function BoardPostDetail({
         ← {backLabel}
       </Link>
       <div className="rounded-md border border-border bg-surface p-5">
-        {teamName && (
-          <span className="mb-2 inline-block rounded-full bg-accent px-2 py-0.5 text-caption text-accent-foreground">
-            [{teamName}]
-          </span>
-        )}
-        <h1 className="text-subtitle font-semibold text-text">{post.title}</h1>
-        <div className="mt-1.5 flex items-center gap-2 text-caption text-text-muted">
-          <span>사용자 {post.user_id.slice(0, 8)}</span>
-          <span>{formatDate(post.created_at)}</span>
-        </div>
-        {post.albums && (
-          <Link
-            href={`/album/${post.albums.mbid}`}
-            className="mt-2 inline-block text-caption text-accent hover:underline"
-          >
-            연결된 앨범: {post.albums.title}
-          </Link>
-        )}
-        <p className="mt-4 whitespace-pre-wrap break-words text-body leading-relaxed text-text">
-          {post.content}
-        </p>
+        <OwnerPostActions
+          table="board_posts"
+          postId={post.id}
+          title={post.title}
+          content={post.content}
+          isOwner={currentUserId === post.user_id}
+          listHref={backHref}
+          editNote={boardType === "promo" ? "팀·앨범은 수정할 수 없어요" : undefined}
+        >
+          {teamName && (
+            <span className="mb-2 inline-block rounded-full bg-accent px-2 py-0.5 text-caption text-accent-foreground">
+              [{teamName}]
+            </span>
+          )}
+          <h1 className="text-subtitle font-semibold text-text">{post.title}</h1>
+          <div className="mt-1.5 flex items-center gap-2 text-caption text-text-muted">
+            <span>사용자 {post.user_id.slice(0, 8)}</span>
+            <span>{formatDate(post.created_at)}</span>
+          </div>
+          {post.albums && (
+            <Link
+              href={`/album/${post.albums.mbid}`}
+              className="mt-2 inline-block text-caption text-accent hover:underline"
+            >
+              연결된 앨범: {post.albums.title}
+            </Link>
+          )}
+          <p className="mt-4 whitespace-pre-wrap break-words text-body leading-relaxed text-text">
+            {post.content}
+          </p>
+        </OwnerPostActions>
         <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
           <BoardPostLikeButton postId={post.id} currentUserId={currentUserId} />
           <SharePostButton />
