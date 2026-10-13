@@ -204,3 +204,21 @@ test("남의 글엔 수정·삭제 버튼 0개 — 갤러리·board (#64/#178)",
     await expect(page.getByRole("button", { name: "수정", exact: true })).toHaveCount(0);
   }
 });
+
+test("프로필 갤러리 글 → 글 상세 도달 (#180, 이름 링크 404 재발 방지)", async ({ page }) => {
+  const { client, userId } = await testUserClient();
+  const { data: artist } = await client.from("artists").select("id, name").eq("is_gallery_open", true).limit(1).single();
+  const title = `${E2E_PREFIX} 프로필 링크 ${Date.now()}`;
+  const { data: post, error } = await client
+    .from("gallery_posts")
+    .insert({ user_id: userId, artist_id: artist!.id, artist_name: artist!.name, title, content: `${E2E_PREFIX} x` })
+    .select("id")
+    .single();
+  await client.auth.signOut({ scope: "local" });
+  if (error || !post) throw error;
+
+  await page.goto(`/profile/${userId}`);
+  await page.getByRole("link", { name: titleRe(title) }).click();
+  await expect(page).toHaveURL(`/gallery/${artist!.id}/${post.id}`);
+  await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
+});
