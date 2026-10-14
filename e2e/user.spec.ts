@@ -33,23 +33,21 @@ test("비관리자: 공지·개념글 탭 글쓰기 버튼·CTA 0개, 전체 탭
   await page.goto(`/gallery/${artistId}`);
   await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
 
-  for (const tab of ["공지", "개념글"]) {
+  for (const [tab, emptyText] of [
+    ["공지", "아직 공지가 없어요"],
+    ["개념글", "아직 개념글이 없어요"],
+  ]) {
     const tabButton = page.getByRole("button", { name: tab, exact: true });
     await tabButton.click();
     await expect(tabButton).toHaveAttribute("aria-pressed", "true");
     // 우상단 버튼과 빈 상태 CTA 모두 없어야 함
     await expect(page.getByRole("button", { name: /글쓰기/ })).toHaveCount(0);
+    // 글이 없으면 탭에 맞는 빈 상태 문구(공지도 모두에게 유지, #183), 있으면 글 목록 — 데이터와 무관하게 성립
+    await expect(
+      page.getByText(emptyText).or(page.locator(`a[href^="/gallery/${artistId}/"]`)).first(),
+    ).toBeVisible();
     await expect(page.getByText("첫 글의 주인공이 되세요")).toHaveCount(0);
   }
-  // 공지 탭은 빈 상태 문구도 없음(#183). 개념글은 글이 없으면 문구, 있으면 글 목록 — 데이터와 무관하게 성립
-  await expect(
-    page.getByText("아직 개념글이 없어요").or(page.locator(`a[href^="/gallery/${artistId}/"]`)).first(),
-  ).toBeVisible();
-  const noticeTab = page.getByRole("button", { name: "공지", exact: true });
-  await noticeTab.click();
-  // 탭 전환 렌더가 끝난 뒤에 확인해야 문구 0개 검증이 공허하지 않음
-  await expect(noticeTab).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByText("아직 공지가 없어요")).toHaveCount(0);
 
   await page.getByRole("button", { name: "전체", exact: true }).click();
   await page.getByRole("button", { name: "글쓰기", exact: true }).first().click();
