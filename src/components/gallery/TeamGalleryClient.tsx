@@ -162,7 +162,8 @@ export function TeamGalleryClient({
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <p className="text-body text-text-muted">{EMPTY_TEXT[filter]}</p>
-          {writeFlag && (
+          {/* 빈 상태 CTA는 전체 탭만 — 공지는 관리자 우상단 버튼으로 충분(#183) */}
+          {writeFlag === "normal" && (
             <Button variant="ghost" onClick={handleWriteClick}>
               {isLoggedIn ? "글쓰기" : "글쓰기 🔒"}
             </Button>

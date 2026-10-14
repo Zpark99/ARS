@@ -28,7 +28,7 @@ test("비관리자 로그인: /updates 글쓰기 없음 (#125)", async ({ page }
   await expect(page.getByRole("button", { name: /글쓰기/ })).toHaveCount(0);
 });
 
-test("비관리자: 공지·개념글 탭 글쓰기 버튼·CTA 0개, 전체 탭은 글쓰기 가능 (#172)", async ({ page }) => {
+test("비관리자: 공지·개념글 탭 글쓰기 버튼·CTA 0개, 전체 탭은 글쓰기 가능 (#172, #183)", async ({ page }) => {
   const artistId = await openGalleryArtistId();
   await page.goto(`/gallery/${artistId}`);
   await expect(page.getByRole("button", { name: "로그아웃" })).toBeVisible();
@@ -42,7 +42,7 @@ test("비관리자: 공지·개념글 탭 글쓰기 버튼·CTA 0개, 전체 탭
     await expect(tabButton).toHaveAttribute("aria-pressed", "true");
     // 우상단 버튼과 빈 상태 CTA 모두 없어야 함
     await expect(page.getByRole("button", { name: /글쓰기/ })).toHaveCount(0);
-    // 글이 없으면 탭에 맞는 빈 상태 문구, 있으면 글 목록 — 데이터와 무관하게 성립
+    // 글이 없으면 탭에 맞는 빈 상태 문구(공지도 모두에게 유지, #183), 있으면 글 목록 — 데이터와 무관하게 성립
     await expect(
       page.getByText(emptyText).or(page.locator(`a[href^="/gallery/${artistId}/"]`)).first(),
     ).toBeVisible();
