@@ -6,6 +6,7 @@
 // 글 종류는 작성한 탭으로 결정(#172, 공지 토글 제거): 전체=normal(로그인 유저),
 // 공지=notice(관리자만 — DB도 020 RLS가 notice를 관리자로 제한, #125),
 // 개념글=작성 불가(좋아요로 선정되는 대상. concept 직접 insert 차단은 #126 결정 후 RLS로).
+// 공지 탭은 빈 상태 문구·CTA 없음 — 작성은 관리자 우상단 버튼만(#183).
 
 "use client";
 
@@ -28,10 +29,9 @@ const FILTERS = [
 
 type FilterKey = (typeof FILTERS)[number]["key"];
 
-const EMPTY_TEXT: Record<FilterKey, string> = {
+const EMPTY_TEXT: Record<Exclude<FilterKey, "notice">, string> = {
   all: "첫 글의 주인공이 되세요",
   concept: "아직 개념글이 없어요",
-  notice: "아직 공지가 없어요",
 };
 
 export function TeamGalleryClient({
@@ -159,7 +159,13 @@ export function TeamGalleryClient({
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {filtered.length > 0 ? (
+        <div className="rounded-md border border-border bg-surface px-3">
+          {filtered.map((post) => (
+            <GalleryRow key={post.id} post={post} href={`/gallery/${artistId}/${post.id}`} />
+          ))}
+        </div>
+      ) : filter !== "notice" ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <p className="text-body text-text-muted">{EMPTY_TEXT[filter]}</p>
           {writeFlag && (
@@ -168,13 +174,7 @@ export function TeamGalleryClient({
             </Button>
           )}
         </div>
-      ) : (
-        <div className="rounded-md border border-border bg-surface px-3">
-          {filtered.map((post) => (
-            <GalleryRow key={post.id} post={post} href={`/gallery/${artistId}/${post.id}`} />
-          ))}
-        </div>
-      )}
+      ) : null}
 
       {/* 키셋 커서 페이지네이션은 #88에서 실데이터와 함께 연결 */}
       {filtered.length > 0 ? (
