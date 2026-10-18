@@ -23,6 +23,7 @@
 | v1.0.2 | 2026-09-26 | 017/018(갤러리 댓글·좋아요, #147/#150) 라이브 DB 조회 기준 반영. 로드맵 추적 번호 갱신(#88 → #155/#156, #104 해소, #148 추가) (#157) |
 | v1.0.3 | 2026-10-09 | role(관리자) 체계 도입분 반영 — `profiles.is_admin` 컬럼, `public.is_admin()` 함수, 019/020 마이그레이션, `board_posts`/`gallery_posts` RLS 정책 4개 교체. 라이브 DB 조회 기준 (#125 — 마이그레이션 적용 완료, UI는 PR #164 머지 전) |
 | v1.0.4 | 2026-10-09 | #125 상태 갱신(UI 게이트 프로덕션 반영 #167, 이슈 종료) + 갤러리 공지 작성 = 공지 탭 관리자 전용(#172, 토글 제거) |
+| v1.0.5 | 2026-10-18 | 021 반영(2026-10-13 적용, #148/#43 해소) — `gallery_posts` 삭제 정리 트리거, `board_type`/`artist_id`/`post_flag` 불변 트리거, 댓글 삭제 시 좋아요 정리. 글 수정·삭제 UI 프로덕션 반영(#64/#178, #182). #151 보강 소스 Spotify → Apple(iTunes) 변경(10/11) (#187) |
 
 ---
 
@@ -245,7 +246,8 @@ CHECK 제약:
 | created_at / updated_at | timestamptz | default now() |
 
 > 댓글·좋아요는 `comments`/`likes`의 `target_type='gallery_post'`로 붙습니다(017/018). `board_posts`의 `post`를 재사용하지 않은 이유: 두 테이블은 UUID 공간이 달라 `target_id`만으로 대상 테이블을 알 수 없게 되기 때문(target_type ↔ 테이블 1:1 유지).
-> 단, `board_posts`의 009와 달리 **삭제 시 연관 댓글/좋아요 정리 트리거가 없습니다** — 현재 UI에 갤러리 글 삭제 기능이 없어 고아 데이터는 생기지 않지만, 삭제 기능 도입 전 선행 필요(#148, 9장 로드맵).
+> 삭제 시 연관 댓글·글 좋아요·그 댓글들의 좋아요는 `trg_cleanup_gallery_post_related`(021 (a), AFTER DELETE, SECURITY DEFINER)가 정리합니다 — 009의 `cleanup_board_post_related()`를 `TG_TABLE_NAME`으로 분기해 같은 함수를 두 테이블에 붙임(#148 해소, 2026-10-13). CASCADE가 아니라 트리거인 이유는 `comments`/`likes.target_id`가 다형성이라 FK가 없기 때문.
+> `artist_id` 변경은 `trg_gallery_posts_artist_immutable`이 차단하고, `post_flag` 변경은 `trg_gallery_posts_flag_admin_only`가 관리자(`is_admin()`)에게만 허용합니다(021 (b), `BEFORE UPDATE OF <컬럼>` + `WHEN (OLD IS DISTINCT FROM NEW)`). 글 수정·삭제 UI는 상세 페이지 `OwnerPostActions`(#64, 프로덕션 반영 #182) — 수정 요청은 `title`·`content`만 실음.
 
 ### 3.6 `comments` (다형성)
 
@@ -259,6 +261,7 @@ CHECK 제약:
 | created_at | timestamptz | default now() |
 
 > `target_type`에 `comment`가 없어 대댓글(답글의 답글)은 스키마상 불가 — 기획 문서 v0.1의 "평면 댓글 권장" 결정과 일치.
+> 댓글 삭제 시 그 댓글의 좋아요(`likes.target_type='comment'`)는 `trg_cleanup_comment_likes`(021 (c), AFTER DELETE, SECURITY DEFINER)가 정리합니다. 그전엔 `/api/comments/[id]`가 사용자 세션으로 지워 **본인 좋아요만** 삭제됐고, 그래서 생긴 고아 좋아요 1건(2026-07-23)을 021 적용 시 함께 정리했습니다. 앱 쪽 수동 정리는 이제 중복(#176에서 제거 예정).
 
 ### 3.7 `likes` (다형성)
 
@@ -360,7 +363,8 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 
 > UPDATE 정책의 `WITH CHECK`는 020에서 **신설**됐습니다. 그전엔 `USING`만 있어 `USING`이 신규 행 검사를 겸했고, 그 때문에 **본인 글의 `board_type`/`post_flag` 바꿔치기가 가능**했습니다(비관리자 JWT로 뚫림 실증 후 차단, 검증 행은 트랜잭션 롤백).
 > 같은 cmd의 PERMISSIVE 정책은 OR로 합쳐지므로 020은 정책을 **추가가 아니라 교체**합니다(단일 트랜잭션으로 DROP~CREATE 틈 제거).
-> `board_type` **전면** 불변은 아닙니다 — `qa ↔ promo` 전환은 여전히 허용되고 강제 트리거도 없습니다(#43 미해소).
+> `board_type`은 021 (b)의 `trg_board_posts_board_type_immutable`(BEFORE UPDATE OF board_type, 관리자 포함 차단)로 **전면 불변**입니다(#43 해소, 2026-10-13). 020의 `WITH CHECK`는 "새 값이 updates인가"만 보고 OLD를 못 보기 때문에 `qa ↔ promo` 전환까지 막으려면 트리거가 필요했습니다. 같은 방식으로 `gallery_posts.artist_id`(차단)·`post_flag`(관리자만) — 3.5 참고. `UPDATE OF <컬럼>` 트리거라 `sync_like_count()`의 `SET like_count`엔 발동하지 않습니다.
+> 제한: 이 트리거는 SQL Editor(postgres)에서도 막힙니다 — JWT가 없으면 `is_admin()`이 false. 운영상 바꿔야 하면 해당 트리거를 잠시 DISABLE.
 > 아직 없는 관리자 정책: `artists`/`albums` 보정(UPDATE 정책 자체 없음 — 보안 구멍이 아니라 기능 공백, `albums` INSERT는 #117), 앨범 등록 요청 승인(`album_requests` 테이블 미존재, 9장).
 
 ---
@@ -414,6 +418,7 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | 018_gallery_post_likes.sql | likes target_type CHECK에 `gallery_post` 추가 + `gallery_posts.like_count` + `sync_like_count()` 갤러리 분기(#150, #104 해소) |
 | 019_profiles_is_admin.sql | `profiles.is_admin` 컬럼 + `public.is_admin()` 헬퍼(SECURITY DEFINER·STABLE·`search_path` 고정) — 관리자 판정 기반(#125) |
 | 020_admin_rls_policies.sql | board_posts·gallery_posts의 INSERT·UPDATE 정책 4개 **교체** — updates 쓰기/notice 지정을 `is_admin()`으로 제한 + UPDATE `WITH CHECK` 신설(바꿔치기 차단)(#125) |
+| 021_post_cleanup_immutable_triggers.sql | 트리거 3종 — (a) `gallery_posts` AFTER DELETE 댓글·좋아요 정리(009 함수 `TG_TABLE_NAME` 분기 재사용) (b) `board_type`/`artist_id` 변경 차단·`post_flag` 변경 관리자만(BEFORE UPDATE OF + WHEN) (c) `comments` AFTER DELETE 좋아요 정리 + 고아 좋아요 1건 정리. 적용 후 `pg_trigger` 2 → 7(#148, #43 · 2026-10-13) |
 
 > 마이그레이션은 앞으로만 쌓는 방식 유지(013을 수정하지 않고 014로 되돌림 — 유령 마이그레이션 방지 원칙, CLAUDE.md).
 
@@ -428,11 +433,23 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | `notifications` | 팔로우/댓글/업데이트 발생 시 알림 적재 | 테이블 없음. `/notifications` 라우트는 빈 상태 스텁만 렌더 | #128 |
 | 키셋 커서 페이지네이션 | offset 금지, (created_at, id) 커서 | 목록 화면 "더 보기"가 비활성 플레이스홀더 | #155 |
 | `albums.artist_name` ↔ `artists` 자동 동기화 | — (기획 문서엔 FK로 이미 연결된 것처럼 가정) | 자유 텍스트라 자동 동기화 없음, 매칭 갭 22% | #101 |
-| 갤러리 글 삭제 시 댓글/좋아요 정리 | `board_posts`와 동일한 삭제 정합성 가정 | `gallery_posts`엔 009 같은 정리 트리거 없음. 삭제 UI가 없어 현재 고아 데이터는 안 생김 | #148 |
 | 갤러리 이미지 업로드 | — | Storage 연동 없음 | #124 |
 | 아카이브 장르/발매연도 필터 | — | `albums`에 해당 컬럼 자체 없음 (MusicBrainz 백필 선행 필요) | #130 |
 | `album_requests` | 앨범 등록 요청(검색 0 → 요청 → 관리자 승인) | 테이블 없음, 모달은 더미 제출(저장 안 됨). **관리자 확인 = Supabase 콘솔 수동으로 확정**(2026-09-24, 06 §5와 동일). role 체계는 #125로 도입됐지만(`is_admin`) 요청 승인 화면은 테이블 신설 + insert 연결 후의 과제 | 저장 연결: #156 / 관리자 UI: #125 |
-| Spotify 연동 전반 | 앨범/아티스트 임포트, `spotify_id`/`source`/`is_verified` | 전면 폐기, MusicBrainz가 **신원 백본**. 2026-10-08 검토 결론(#151): 교체 없이 **커버·메타 보강 레이어**로만 재도입 검토(링크백·로고 출처 표시 의무 선행), 구현은 v1.1 | #151 |
+| Spotify 연동 전반 | 앨범/아티스트 임포트, `spotify_id`/`source`/`is_verified` | 전면 폐기, MusicBrainz가 **신원 백본**. 검토 결론(#151): 교체 없이 **커버·메타 보강 레이어**만 추가. 보강 소스는 2026-10-08 Spotify → **2026-10-11 Apple(iTunes Search API)로 변경** — 키 불필요, `country=KR`, MusicBrainz `barcode` → `/lookup?upc=` 1:1 매칭(바코드 없으면 이름 검색 폴백). 착수 전 Apple/iTunes 약관의 링크백·표기 조건 확인. 구현은 v1.1 | #151 |
+
+### 해소 — 삭제 정리 · 컬럼 불변 (2026-10-13, #148/#43)
+
+이 표에 "`gallery_posts`엔 정리 트리거 없음(#148)"으로 있던 항목과 6장의 "`board_type` 전면 불변 아님(#43)"은 021로 해소됐습니다.
+
+| 조각 | 상태 |
+|---|---|
+| `gallery_posts` 삭제 시 댓글·좋아요 정리 (021 a) | 라이브 DB **적용 완료** (3.5) |
+| `board_type`/`artist_id` 불변 · `post_flag` 관리자만 (021 b) | 라이브 DB **적용 완료** (6장) |
+| 댓글 삭제 시 좋아요 정리 + 고아 1건 정리 (021 c) | 라이브 DB **적용 완료** (3.6) |
+| 글 수정·삭제 UI(`OwnerPostActions`, 갤러리·QA·홍보·업데이트 공용) | PR #179 → 프로덕션 반영(#182, 2026-10-13). 10/14 프로덕션 눈 확인 7/7 |
+
+> 021 검증은 SQL Editor DO 블록(`role=authenticated` + JWT 주입, 끝에 예외로 전체 롤백) `V021 ALL PASSED` + E2E. 앱 쪽 수동 정리(`/api/comments/[id]`, `e2e/helpers.ts` sweep)는 중복이라 #176에서 제거 예정. `like_count`를 본인 글 UPDATE로 바꿀 수 있는 경로는 아직 열려 있음(이슈 없음, W42 회고 넘김).
 
 ### 해소 — role / 관리자 권한 (2026-10-08, #125)
 
