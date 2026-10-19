@@ -114,10 +114,11 @@ export function GlobalHeader({ user = null }: GlobalHeaderProps) {
         <Link href="/" className="text-subtitle font-semibold text-accent">
           ARS
         </Link>
+        {/* 아이콘 20px 유지, 패딩+음수 마진으로 터치 영역만 44px(#190) */}
         <Link
           href="/notifications"
           aria-label="알림"
-          className="text-text-muted transition-colors hover:text-text"
+          className="-m-3 inline-flex p-3 text-text-muted transition-colors hover:text-text"
         >
           <BellIcon />
         </Link>

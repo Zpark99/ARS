@@ -124,8 +124,9 @@ export function TeamGalleryClient({
   return (
     <div className="mx-auto flex max-w-[1364px] flex-col gap-5 px-4 py-6 md:px-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-title text-text">{teamName} 갤러리</h1>
-        <div className="flex items-center gap-2">
+        {/* 긴 팀명(S△SSY D△D)에서 375px 우측 버튼이 2줄로 꺾이지 않게 — 제목만 줄이고 버튼은 한 줄 고정(#190) */}
+        <h1 className="min-w-0 truncate text-title text-text">{teamName} 갤러리</h1>
+        <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
           <SubscribeButton />
           {writeFlag && (
             <Button variant="ghost" size="sm" onClick={handleWriteClick}>

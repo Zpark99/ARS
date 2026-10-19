@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openGalleryArtistId } from "./helpers";
+import { anyAlbumMbid, longestNameGalleryArtistId, openGalleryArtistId } from "./helpers";
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
@@ -54,4 +54,27 @@ test("푸터: 문의 → /qa 도달, 이용약관·href=# 링크 없음 (#111)",
   await footer.getByRole("link", { name: "문의", exact: true }).click();
   await expect(page).toHaveURL(/\/qa$/);
   await expect(page.getByRole("heading", { name: "QA", exact: true })).toBeVisible();
+});
+
+test("앨범 허브 커버 박스 높이 > 0 — 1440·375 (#190)", async ({ page }) => {
+  const mbid = await anyAlbumMbid();
+  for (const width of [1440, 375]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`/album/${mbid}`);
+    // 커버 래퍼 = h1의 부모 바로 앞 형제. 커버 로드 여부와 무관하게(placeholder 포함) 정사각형이어야 한다.
+    const box = await page.locator("xpath=//h1/../preceding-sibling::div[1]").boundingBox();
+    expect(box, `${width}px 커버 래퍼 없음`).toBeTruthy();
+    expect(box!.height, `${width}px 커버 높이 0`).toBeGreaterThan(0);
+    expect(Math.abs(box!.height - box!.width), `${width}px 커버가 정사각형 아님`).toBeLessThanOrEqual(1);
+  }
+});
+
+test("갤러리 375 긴 팀명: 구독 버튼 한 줄 유지 (#190)", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/gallery/${await longestNameGalleryArtistId()}`);
+  const button = page.getByRole("button", { name: "구독 준비 중" });
+  await expect(button).toBeVisible();
+  const box = await button.boundingBox();
+  // Button sm = text-body 22px + py-1.5 12px + border 2px = 36px. 2줄이면 58px.
+  expect(box!.height, "구독 버튼이 2줄로 꺾임").toBeLessThanOrEqual(40);
 });
