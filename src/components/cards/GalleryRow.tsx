@@ -28,22 +28,28 @@ export function GalleryRow({ post, href }: { post: GalleryRowData; href: string 
   const { title, author, likeCount, time, flag, visited } = post;
 
   return (
+    // 모바일: 제목 줄 + 메타 줄 2단(메타가 제목 폭을 ~120px로 밀어내던 문제, #194).
+    // md+: 두 묶음을 display:contents로 풀어 기존 한 줄 레이아웃 그대로.
     <Link
       href={href}
       id={`gallery-post-${post.id}`}
-      className="flex items-center gap-2 border-b border-border py-2.5 last:border-b-0"
+      className="flex flex-col gap-1 border-b border-border py-2.5 last:border-b-0 md:flex-row md:items-center md:gap-2"
     >
-      {flag && flag !== "normal" ? (
-        <span className="shrink-0 text-caption text-accent">[{FLAG_LABEL[flag]}]</span>
-      ) : null}
-      <span
-        className={`min-w-0 flex-1 truncate text-body ${visited ? "text-text-muted" : "text-text"}`}
-      >
-        {title}
-      </span>
-      <span className="shrink-0 text-caption text-text-muted">{author}</span>
-      <span className="shrink-0 text-caption text-text-muted">♥ {likeCount}</span>
-      <span className="shrink-0 text-caption text-text-muted">{time}</span>
+      <div className="flex min-w-0 items-center gap-2 md:contents">
+        {flag && flag !== "normal" ? (
+          <span className="shrink-0 text-caption text-accent">[{FLAG_LABEL[flag]}]</span>
+        ) : null}
+        <span
+          className={`min-w-0 flex-1 truncate text-body ${visited ? "text-text-muted" : "text-text"}`}
+        >
+          {title}
+        </span>
+      </div>
+      <div className="flex items-center gap-2 md:contents">
+        <span className="shrink-0 text-caption text-text-muted">{author}</span>
+        <span className="shrink-0 text-caption text-text-muted">♥ {likeCount}</span>
+        <span className="shrink-0 text-caption text-text-muted">{time}</span>
+      </div>
     </Link>
   );
 }

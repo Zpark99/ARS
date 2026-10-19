@@ -46,10 +46,9 @@ export function AlbumCard({
             </span>
           ) : null}
         </div>
-        <h3 className="line-clamp-1 text-[15px] font-medium leading-tight text-text">
-          {title}
-        </h3>
-        <p className="line-clamp-1 text-[13px] text-text-muted">{artist}</p>
+        {/* 15/13px 하드코딩 → body/caption 토큰(#194) */}
+        <h3 className="line-clamp-1 text-body font-medium text-text">{title}</h3>
+        <p className="line-clamp-1 text-caption text-text-muted">{artist}</p>
         {showRating ? <RatingStars value={rating} size={16} /> : null}
       </article>
     </Link>

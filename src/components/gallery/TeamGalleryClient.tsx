@@ -140,7 +140,7 @@ export function TeamGalleryClient({
         <div className="rounded-md border border-border bg-surface p-4">
           {writeFlag === "notice" && <p className="mb-3 text-caption text-text-muted">공지로 등록돼요</p>}
           <BoardPostForm onSubmit={handleCreate} onCancel={() => setIsWriting(false)} submitLabel="작성" />
-          {submitError && <p className="mt-2 text-xs text-red-500">{submitError}</p>}
+          {submitError && <p className="mt-2 text-caption text-danger">{submitError}</p>}
         </div>
       )}
 
