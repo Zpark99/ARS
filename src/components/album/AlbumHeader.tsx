@@ -43,7 +43,8 @@ export function AlbumHeader({
 
   return (
     <div className="flex items-center gap-4 px-4 py-4 md:items-start md:gap-6 md:px-6">
-      <div className="w-20 shrink-0 md:w-40">
+      {/* AlbumCover는 absolute/h-full이라 래퍼에 높이가 있어야 함 — 없으면 0px로 안 보임(#190) */}
+      <div className="aspect-square w-20 shrink-0 md:w-40">
         <AlbumCover src={coverUrl} alt={`${title} 앨범 커버`} />
       </div>
       <div className="min-w-0 flex-1">

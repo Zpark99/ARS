@@ -71,3 +71,23 @@ export async function sweepE2ERows(): Promise<number> {
   await client.auth.signOut({ scope: "local" });
   return (postLeft ?? 0) + (boardLeft ?? 0) + (commentLeft ?? 0);
 }
+
+// 실제 존재하는 앨범 하나(더미 mbid 금지 — #49/#96). 앨범 허브 레이아웃 검사용(#190).
+export async function anyAlbumMbid(): Promise<string> {
+  const { data } = await anonClient().from("albums").select("mbid").limit(1).single();
+  if (!data?.mbid) throw new Error("앨범이 DB에 없음");
+  return data.mbid;
+}
+
+// 열린 갤러리 중 팀명이 가장 긴 것(글자 수 같으면 바이트 수 — S△SSY D△D처럼 넓은 글리프 우선).
+// 375px 제목 행에서 우측 버튼이 줄바꿈되는지 보는 최악 케이스(#190).
+export async function longestNameGalleryArtistId(): Promise<string> {
+  const { data } = await anonClient().from("artists").select("id, name").eq("is_gallery_open", true);
+  const rows = (data ?? []) as { id: string; name: string }[];
+  if (!rows.length) throw new Error("열린 갤러리가 DB에 없음");
+  rows.sort(
+    (a, b) =>
+      `${b.name}`.length - `${a.name}`.length || Buffer.byteLength(b.name) - Buffer.byteLength(a.name),
+  );
+  return rows[0].id;
+}
