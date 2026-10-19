@@ -7,6 +7,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
 import { MAX_COMMENT_LENGTH } from "@/lib/validation/comment";
 import { toggleLike, UnauthorizedLikeError } from "@/lib/likes/toggleLike";
 import type { CommentRow } from "@/types/album";
@@ -138,13 +139,9 @@ export function ReactionTab({
             >
               {content.length}/{MAX_COMMENT_LENGTH}
             </span>
-            <button
-              onClick={handleSubmit}
-              disabled={!content.trim() || submitting}
-              className="rounded-full bg-accent px-4 py-1.5 text-caption font-semibold text-accent-foreground disabled:opacity-40"
-            >
+            <Button size="sm" onClick={handleSubmit} disabled={!content.trim() || submitting}>
               {submitting ? "등록 중..." : "등록"}
-            </button>
+            </Button>
           </div>
           {submitError && <p className="mt-1 text-caption text-danger">{submitError}</p>}
         </div>
