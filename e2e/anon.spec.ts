@@ -35,6 +35,13 @@ test("/album/mbid-1 → 404 (#109 더미 식별자 가드)", async ({ page }) =>
   expect(res?.status()).toBe(404);
 });
 
+test("가짜 식별자 전 라우트 404 유지 — generateMetadata가 404 흐름을 안 깬다 (#196)", async ({ page }) => {
+  for (const path of ["/gallery/xxx", "/gallery/xxx/yyy", "/promo/mbid-1", "/qa/mbid-1", "/updates/mbid-1"]) {
+    const res = await page.goto(path);
+    expect(res?.status(), path).toBe(404);
+  }
+});
+
 test("비로그인: /updates 글쓰기 없음 · 갤러리 글쓰기는 로그인으로 (#125)", async ({ page }) => {
   await page.goto("/updates");
   await expect(page.getByRole("heading", { name: "업데이트" })).toBeVisible();
