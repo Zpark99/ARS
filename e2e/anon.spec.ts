@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { anyAlbumMbid, longestNameGalleryArtistId, openGalleryArtistId } from "./helpers";
+import { anonClient, anyAlbumMbid, longestNameGalleryArtistId, openGalleryArtistId } from "./helpers";
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
@@ -77,4 +77,33 @@ test("갤러리 375 긴 팀명: 구독 버튼 한 줄 유지 (#190)", async ({ p
   const box = await button.boundingBox();
   // Button sm = text-body 22px + py-1.5 12px + border 2px = 36px. 2줄이면 58px.
   expect(box!.height, "구독 버튼이 2줄로 꺾임").toBeLessThanOrEqual(40);
+});
+
+test("홈 월간 앨범: 부제가 실제 집계 기간과 일치 + 피드가 좌측 컬럼보다 길지 않음 (#192)", async ({ page }) => {
+  // DB 상태로 기대값을 정한다 — 최근 30일 평가가 있으면 "최근 30일", 없고 전체 평가가 있으면 "전체 기간" 폴백.
+  const sb = anonClient();
+  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const [{ count: recent }, { count: all }] = await Promise.all([
+    sb.from("ratings").select("id", { count: "exact", head: true }).gte("created_at", cutoff),
+    sb.from("ratings").select("id", { count: "exact", head: true }),
+  ]);
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  // 첫 <section> = 월간 앨범(좌) + 실시간 피드(우) 2열 그리드. 직계 자식이 각 섹션 루트.
+  const grid = page.locator("main section").first();
+  const monthly = grid.locator("> div").nth(0);
+  const feed = grid.locator("> div").nth(1);
+  await expect(monthly.getByRole("heading", { name: "월간 앨범" })).toBeVisible();
+  await expect(monthly.getByText((recent ?? 0) > 0 ? "최근 30일" : "전체 기간", { exact: true })).toBeVisible();
+  // 캐러셀이 채워져도 페이지 가로 스크롤은 없어야 한다(fr 트랙 min-content 회귀 방지)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(1440);
+  if ((all ?? 0) > 0) {
+    await expect(monthly.locator('a[href^="/album/"]').first()).toBeVisible();
+    // 1440: 피드 목록 박스가 좌측 월간 앨범 섹션 아래로 삐져나오지 않는다(안쪽 스크롤)
+    const feedList = feed.locator("div.rounded-md").first();
+    const [m, f] = await Promise.all([monthly.boundingBox(), feedList.boundingBox()]);
+    expect(f, "피드 목록 없음(활동 0건이면 이 검사는 의미 없음)").toBeTruthy();
+    expect(f!.y + f!.height, "피드가 좌측 월간 앨범 섹션보다 길다").toBeLessThanOrEqual(m!.y + m!.height + 1);
+  }
 });
