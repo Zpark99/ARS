@@ -2,6 +2,7 @@
 // QA 게시판 목록 - 홍보/갤러리와 동일한 행 목록 양식으로 통일(#127).
 // 아코디언 펼침(BoardClient) 대신 BoardListClient(행 목록 → /qa/[postId] 상세).
 
+import type { Metadata } from "next";
 import { BoardListClient } from "@/components/board/BoardListClient";
 import { createClient } from "@/lib/supabase/server";
 import type { BoardPostRowData } from "@/components/board/BoardPostRow";
@@ -21,6 +22,8 @@ type QaPostRow = {
   created_at: string;
   like_count: number;
 };
+
+export const metadata: Metadata = { title: "QA" };
 
 export default async function QaPage() {
   const supabase = await createClient();

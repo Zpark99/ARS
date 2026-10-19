@@ -91,3 +91,10 @@ export async function longestNameGalleryArtistId(): Promise<string> {
   );
   return rows[0].id;
 }
+
+// 실제 존재하는 앨범 하나의 mbid + 제목. <title>에 앨범명이 들어가는지 보는 용도(#196).
+export async function anyAlbum(): Promise<{ mbid: string; title: string }> {
+  const { data } = await anonClient().from("albums").select("mbid, title").limit(1).single();
+  if (!data?.mbid) throw new Error("앨범이 DB에 없음");
+  return data;
+}

@@ -6,6 +6,8 @@
 // 조회수·이미지는 컬럼 자체가 없어 제외.
 // 본인 글 수정·삭제는 board 상세와 같은 OwnerPostActions(#64). 갤러리 이동·글 종류 변경은 범위 밖(021 트리거로도 차단).
 
+import type { Metadata } from "next";
+import { galleryPostMetadata } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -37,6 +39,12 @@ function formatDate(iso: string): string {
     month: "short",
     day: "numeric",
   });
+}
+
+// <title> "{글 제목}" (#196)
+export async function generateMetadata({ params }: { params: Promise<{ artistId: string; postId: string }> }): Promise<Metadata> {
+  const { artistId, postId } = await params;
+  return galleryPostMetadata(artistId, postId);
 }
 
 export default async function GalleryPostPage({
