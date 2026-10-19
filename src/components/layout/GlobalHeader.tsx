@@ -49,13 +49,14 @@ export function GlobalHeader({ user = null }: GlobalHeaderProps) {
           ARS
         </Link>
 
+        {/* 내비 18px 하드코딩 → subtitle 토큰. 로고(subtitle semibold)와 같은 크기라 로고가 내비보다 작지 않음(#194) */}
         <ul className="flex items-center gap-6">
           {NAV_ITEMS.map((item) => (
             <li key={item.href}>
               <Link
                 href={item.href}
                 aria-current={isActive(item.href) ? "page" : undefined}
-                className={`text-[18px] transition-colors ${
+                className={`text-subtitle transition-colors ${
                   isActive(item.href)
                     ? "text-text"
                     : "text-text-muted hover:text-text"
@@ -114,10 +115,11 @@ export function GlobalHeader({ user = null }: GlobalHeaderProps) {
         <Link href="/" className="text-subtitle font-semibold text-accent">
           ARS
         </Link>
+        {/* 아이콘 20px 유지, 패딩+음수 마진으로 터치 영역만 44px(#190) */}
         <Link
           href="/notifications"
           aria-label="알림"
-          className="text-text-muted transition-colors hover:text-text"
+          className="-m-3 inline-flex p-3 text-text-muted transition-colors hover:text-text"
         >
           <BellIcon />
         </Link>

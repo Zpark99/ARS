@@ -25,7 +25,8 @@ export function SectionHeader({ title, subtitle, action, href }: SectionHeaderPr
       {action ? (
         action
       ) : href ? (
-        <Link href={href} className="shrink-0 text-body text-text-muted hover:text-text">
+        // 글자 22px 그대로, 패딩+음수 마진으로 터치 영역만 46px(#190)
+        <Link href={href} className="-mx-2 -my-3 shrink-0 px-2 py-3 text-body text-text-muted hover:text-text">
           더보기 →
         </Link>
       ) : null}

@@ -1,7 +1,7 @@
 // app/page.tsx
 // 컴포넌트스펙_3_홈카드조립. 홈 4섹션 콘텐츠 허브 (#68 → #88 실데이터 연결).
 
-import { MonthlyAlbumsSection, type MonthlyAlbum } from "@/components/home/MonthlyAlbumsSection";
+import { MonthlyAlbumsSection, type MonthlyAlbum, type MonthlyPeriod } from "@/components/home/MonthlyAlbumsSection";
 import { RealtimeFeedSection } from "@/components/home/RealtimeFeedSection";
 import { GalleryHotSection } from "@/components/home/GalleryHotSection";
 import { PromoSection } from "@/components/home/PromoSection";
@@ -29,17 +29,23 @@ type AlbumBase = {
   cover_url: string | null;
 };
 
+// 최근 30일 평가가 0건이면 전체 기간으로 폴백하고 period로 알려 부제를 실제 기간에 맞춘다(#192).
+// "최근 30일"이라 써놓고 전체 기간 데이터를 보여주는 거짓 표기 금지.
 async function getMonthlyAlbums(
   supabase: Awaited<ReturnType<typeof createClient>>
-): Promise<MonthlyAlbum[]> {
-  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const { data, error } = await supabase
-    .from("ratings")
-    .select("score, album_id, albums!inner(id, mbid, title, artist_name, cover_url, like_count)")
-    .gte("created_at", cutoff);
-  if (error) console.error("monthly albums fetch failed:", error);
-
+): Promise<{ albums: MonthlyAlbum[]; period: MonthlyPeriod }> {
   type Row = { score: number; album_id: string; albums: AlbumBase & { like_count: number } };
+  const SELECT = "score, album_id, albums!inner(id, mbid, title, artist_name, cover_url, like_count)";
+
+  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  let period: MonthlyPeriod = "recent";
+  let { data, error } = await supabase.from("ratings").select(SELECT).gte("created_at", cutoff);
+  if (error) console.error("monthly albums fetch failed:", error);
+  if (!data?.length) {
+    period = "all";
+    ({ data, error } = await supabase.from("ratings").select(SELECT));
+    if (error) console.error("all-time albums fetch failed:", error);
+  }
   const rows = (data ?? []) as unknown as Row[];
 
   const byAlbum = new Map<string, { album: Row["albums"]; sum: number; count: number }>();
@@ -50,7 +56,7 @@ async function getMonthlyAlbums(
     byAlbum.set(r.album_id, entry);
   }
 
-  return [...byAlbum.values()]
+  const albums = [...byAlbum.values()]
     .map(({ album, sum, count }) => ({
       id: album.id,
       mbid: album.mbid,
@@ -62,6 +68,7 @@ async function getMonthlyAlbums(
     }))
     .sort((a, b) => b.rating - a.rating)
     .slice(0, 10);
+  return { albums, period };
 }
 
 async function getRealtimeFeed(
@@ -295,7 +302,7 @@ async function getRecentReleases(
 export default async function HomePage() {
   const supabase = await createClient();
 
-  const [monthlyAlbums, feed, galleryPosts, promos, reviewedAlbums, recentReleases] = await Promise.all([
+  const [monthly, feed, galleryPosts, promos, reviewedAlbums, recentReleases] = await Promise.all([
     getMonthlyAlbums(supabase),
     getRealtimeFeed(supabase),
     getGalleryHotPosts(supabase),
@@ -306,8 +313,10 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto flex max-w-[1364px] flex-col gap-5 px-4 py-6 md:px-6">
-      <section className="grid grid-cols-1 gap-5 md:grid-cols-[972fr_372fr]">
-        <MonthlyAlbumsSection albums={monthlyAlbums} />
+      {/* minmax(0, …fr): fr 트랙의 기본 min이 auto(min-content)라 캐러셀 카드 전체 폭만큼 컬럼이 늘어나
+          1440에서 가로 스크롤이 생김(#192, 월간 앨범이 채워지면서 드러남). 0으로 내려 캐러셀이 안에서 스크롤 */}
+      <section className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,972fr)_minmax(0,372fr)]">
+        <MonthlyAlbumsSection albums={monthly.albums} period={monthly.period} />
         <RealtimeFeedSection items={feed} />
       </section>
 

@@ -4,8 +4,11 @@
 // showRating=false로 숨기므로 조인 없이 0 고정. genre/year는 스키마에 없어
 // 미분류/등록연도로 대체 — 두 필터는 사실상 동작 안 함(#88 스코프, 이번엔 동선만).
 
+import type { Metadata } from "next";
 import { ArchiveClient, type ArchiveAlbum } from "@/components/archive/ArchiveClient";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = { title: "아카이브" };
 
 export default async function ArchivePage() {
   const supabase = await createClient();

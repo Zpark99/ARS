@@ -8,16 +8,18 @@ interface StarRatingProps {
   size?: 'sm' | 'md'
 }
 
+// 색은 RatingStars(홈·아카이브)와 동일 토큰: 채움 accent / 빈 별 border. hex 하드코딩 금지(#194)
 function Star({ px, filled }: { px: number; filled: boolean }) {
   return (
     <svg
       width={px}
       height={px}
       viewBox="0 0 24 24"
-      fill={filled ? '#FACC15' : 'none'}
-      stroke={filled ? '#FACC15' : '#D1D5DB'}
+      fill={filled ? 'currentColor' : 'none'}
+      stroke="currentColor"
       strokeWidth="1.5"
       strokeLinejoin="round"
+      className={filled ? 'text-accent' : 'text-border'}
     >
       <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
     </svg>

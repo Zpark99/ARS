@@ -2,6 +2,8 @@
 // 컴포넌트스펙_5_갤러리홍보 - 화면 3: 팀별 갤러리 (#70 → #88 실데이터 연결).
 // artistId는 artists.id(실제 UUID). 게시글 상세는 /gallery/[artistId]/[postId] (#118).
 
+import type { Metadata } from "next";
+import { galleryMetadata } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import { TeamGalleryClient } from "@/components/gallery/TeamGalleryClient";
 import type { GalleryRowData, GalleryPostFlag } from "@/components/cards/GalleryRow";
@@ -24,6 +26,11 @@ type GalleryPostRow = {
   post_flag: GalleryPostFlag;
   like_count: number;
 };
+
+// <title> "{팀명} 갤러리" (#196)
+export async function generateMetadata({ params }: { params: Promise<{ artistId: string }> }): Promise<Metadata> {
+  return galleryMetadata((await params).artistId);
+}
 
 export default async function TeamGalleryPage({
   params,

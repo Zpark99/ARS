@@ -16,9 +16,19 @@ const pretendard = localFont({
   display: "swap",
 });
 
+// 사이트 공통 메타(#196). description은 README 소개 문구와 동일. 페이지별 title은 각 page의
+// metadata/generateMetadata가 template("%s | ARS")에 끼워 넣는다. og:image/twitter:image는
+// app/opengraph-image.tsx 파일 규약으로 자동 추가, metadataBase로 절대 URL이 된다.
+const SITE_DESCRIPTION = "리스너는 즐길 수 있고, 아티스트는 홍보를 할 수 있는 음악 커뮤니티";
+
 export const metadata: Metadata = {
-  title: "ARS",
-  description: "앨범 평가 서비스",
+  metadataBase: new URL("https://ars-eta-one.vercel.app"),
+  title: { default: "ARS", template: "%s | ARS" },
+  description: SITE_DESCRIPTION,
+  // og/twitter title은 비워 두면 Next가 각 페이지의 resolved title("{앨범명} - {아티스트} | ARS")을
+  // 상속시킨다 — 고정 "ARS"로 두면 모든 공유 링크가 같은 제목으로 보임
+  openGraph: { type: "website", locale: "ko_KR", siteName: "ARS" },
+  twitter: { card: "summary_large_image" },
 };
 
 export default async function RootLayout({

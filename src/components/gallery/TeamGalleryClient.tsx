@@ -124,8 +124,9 @@ export function TeamGalleryClient({
   return (
     <div className="mx-auto flex max-w-[1364px] flex-col gap-5 px-4 py-6 md:px-6">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-title text-text">{teamName} 갤러리</h1>
-        <div className="flex items-center gap-2">
+        {/* 긴 팀명(S△SSY D△D)에서 375px 우측 버튼이 2줄로 꺾이지 않게 — 제목만 줄이고 버튼은 한 줄 고정(#190) */}
+        <h1 className="min-w-0 truncate text-title text-text">{teamName} 갤러리</h1>
+        <div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
           <SubscribeButton />
           {writeFlag && (
             <Button variant="ghost" size="sm" onClick={handleWriteClick}>
@@ -139,7 +140,7 @@ export function TeamGalleryClient({
         <div className="rounded-md border border-border bg-surface p-4">
           {writeFlag === "notice" && <p className="mb-3 text-caption text-text-muted">공지로 등록돼요</p>}
           <BoardPostForm onSubmit={handleCreate} onCancel={() => setIsWriting(false)} submitLabel="작성" />
-          {submitError && <p className="mt-2 text-xs text-red-500">{submitError}</p>}
+          {submitError && <p className="mt-2 text-caption text-danger">{submitError}</p>}
         </div>
       )}
 
@@ -162,7 +163,8 @@ export function TeamGalleryClient({
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <p className="text-body text-text-muted">{EMPTY_TEXT[filter]}</p>
-          {writeFlag && (
+          {/* 빈 상태 CTA는 전체 탭만 — 공지는 관리자 우상단 버튼으로 충분(#183) */}
+          {writeFlag === "normal" && (
             <Button variant="ghost" onClick={handleWriteClick}>
               {isLoggedIn ? "글쓰기" : "글쓰기 🔒"}
             </Button>
