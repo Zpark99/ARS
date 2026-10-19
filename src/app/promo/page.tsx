@@ -3,6 +3,7 @@
 // 앨범 허브 홍보 탭(album_id 필터)과 달리 여기는 필터 없는 board_posts promo 전체 목록.
 // 게시글 상세는 /promo/[postId] (#120).
 
+import type { Metadata } from "next";
 import { PromoClient } from "@/components/promo/PromoClient";
 import { createClient } from "@/lib/supabase/server";
 import type { PromoCardData } from "@/components/cards/PromoCard";
@@ -23,6 +24,8 @@ type PromoPostRow = {
   artists: { name: string } | null;
   artist_name_text: string | null;
 };
+
+export const metadata: Metadata = { title: "홍보게시판" };
 
 export default async function PromoPage() {
   const supabase = await createClient();

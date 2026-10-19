@@ -2,6 +2,7 @@
 // 컴포넌트스펙_5_갤러리홍보 - 화면 1: 갤러리 홈 (#70 → #88 실데이터 연결).
 // 디시 메인 구조: 개념글 → 인기 갤러리 → 전체보기.
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { GalleryRow, type GalleryRowData } from "@/components/cards/GalleryRow";
@@ -17,6 +18,8 @@ function formatDate(iso: string): string {
     day: "numeric",
   });
 }
+
+export const metadata: Metadata = { title: "갤러리" };
 
 export default async function GalleryHomePage() {
   const supabase = await createClient();

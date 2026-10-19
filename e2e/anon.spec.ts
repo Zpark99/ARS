@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { anonClient, anyAlbumMbid, longestNameGalleryArtistId, openGalleryArtistId } from "./helpers";
+import { anonClient, anyAlbum, anyAlbumMbid, longestNameGalleryArtistId, openGalleryArtistId } from "./helpers";
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
@@ -105,5 +105,26 @@ test("홈 월간 앨범: 부제가 실제 집계 기간과 일치 + 피드가 �
     const [m, f] = await Promise.all([monthly.boundingBox(), feedList.boundingBox()]);
     expect(f, "피드 목록 없음(활동 0건이면 이 검사는 의미 없음)").toBeTruthy();
     expect(f!.y + f!.height, "피드가 좌측 월간 앨범 섹션보다 길다").toBeLessThanOrEqual(m!.y + m!.height + 1);
+  }
+});
+
+test("메타: 홈 title·og:title·og:image, 앨범 허브 title에 앨범명, 아이콘·OG 이미지 200 (#196)", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveTitle("ARS");
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", "ARS");
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /\/opengraph-image/);
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute("href", /\/icon/);
+
+  const album = await anyAlbum();
+  await page.goto(`/album/${album.mbid}`);
+  // 앨범명은 정규식 메타문자를 포함할 수 있어 문자열 prefix로 검사 (template "%s | ARS")
+  const title = await page.title();
+  expect(title.startsWith(`${album.title} - `), `title="${title}"`).toBe(true);
+  expect(title.endsWith(" | ARS"), `title="${title}"`).toBe(true);
+
+  for (const path of ["/icon", "/apple-icon", "/opengraph-image"]) {
+    const res = await page.request.get(path);
+    expect(res.status(), path).toBe(200);
+    expect(res.headers()["content-type"], path).toContain("image/png");
   }
 });

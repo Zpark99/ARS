@@ -3,6 +3,7 @@
 // 관리자 작성 공간 - 글쓰기는 is_admin()만 노출(#125). DB에서도 RLS board_posts_insert_own이
 // board_type='updates'를 관리자로 제한하므로, 이 UI 게이트는 이중 방어의 겉면.
 
+import type { Metadata } from "next";
 import { BoardListClient } from "@/components/board/BoardListClient";
 import { createClient } from "@/lib/supabase/server";
 import type { BoardPostRowData } from "@/components/board/BoardPostRow";
@@ -22,6 +23,8 @@ type UpdatePostRow = {
   created_at: string;
   like_count: number;
 };
+
+export const metadata: Metadata = { title: "업데이트" };
 
 export default async function UpdatesPage() {
   const supabase = await createClient();

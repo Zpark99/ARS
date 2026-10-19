@@ -1,3 +1,5 @@
+import type { Metadata } from 'next'
+import { albumMetadata } from '@/lib/seo'
 import { notFound } from 'next/navigation'
 import { AlbumHubClient } from '@/components/album/AlbumHubClient'
 import { createClient } from '@/lib/supabase/server'
@@ -71,6 +73,11 @@ async function fetchAndInsertAlbum(
 
   if (error) return null
   return data as AlbumRow
+}
+
+// <title> "{앨범명} - {아티스트}" (#196). 못 찾으면 기본 제목, 404 판정은 아래 page가 담당
+export async function generateMetadata({ params }: { params: Promise<{ mbid: string }> }): Promise<Metadata> {
+  return albumMetadata((await params).mbid)
 }
 
 export default async function AlbumPage({
