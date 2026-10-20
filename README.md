@@ -8,9 +8,16 @@
 
 ## 스크린샷
 
-> *(홈 화면 스크린샷/GIF)*
+| 홈 (1440) | 앨범 허브 (1440) |
+|---|---|
+| ![홈 1440](docs/images/home-1440.png) | ![앨범 허브 1440](docs/images/album-1440.png) |
 
-> *(앨범 허브 화면 스크린샷/GIF)*
+<details>
+<summary>모바일 홈 (375)</summary>
+
+![홈 375](docs/images/home-375.png)
+
+</details>
 
 ## 이런 서비스입니다
 
@@ -20,8 +27,9 @@ MusicBrainz에서 앨범을 검색해 아카이브에 모으고, 앨범마다 "�
 
 - **앨범 아카이브** — MusicBrainz API로 앨범 검색, 아카이브 목록/필터(아티스트·평점·정렬)
 - **앨범 허브** — 앨범별 홍보/갤러리/반응/정보 4개 탭(`HubTabs`)
-- **커뮤니티 게시판** — 홍보·갤러리·QA·업데이트 4종 게시판 글쓰기/열람, 댓글·좋아요
+- **커뮤니티 게시판** — 홍보·갤러리·QA·업데이트 4종 게시판 글쓰기/열람/수정·삭제(본인 글), 댓글·좋아요·공유
 - **소셜** — 공개 프로필, 팔로우/언팔로우, 좋아요(앨범/댓글/게시글 공통)
+- **관리자 role** — 업데이트 게시판 글쓰기와 갤러리 공지는 `is_admin`만. UI 숨김이 아니라 RLS `WITH CHECK`로 DB에서 차단(#125)
 - **랭킹** — 홈 화면 HOT 앨범에만 적용(앨범 좋아요 순)
 
 ## 기술 스택
@@ -31,7 +39,7 @@ MusicBrainz에서 앨범을 검색해 아카이브에 모으고, 앨범마다 "�
 | Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS 4, React 19 |
 | Backend/DB | Supabase (PostgreSQL, RLS, Auth) |
 | 외부 API | MusicBrainz, Cover Art Archive |
-| 테스트 | Vitest |
+| 테스트 | Vitest(단위 49개), Playwright(E2E 17개 — 로컬 `next build` + `next start` 대상) |
 | 배포 | Vercel |
 
 ## 한번 막힌 지점
@@ -66,9 +74,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
 ```bash
-npm run lint   # ESLint
-npm run test   # Vitest
-npm run build  # 프로덕션 빌드
+npm run lint       # ESLint
+npm run test       # Vitest
+npm run build      # 프로덕션 빌드
+npm run test:e2e   # Playwright (별도 .env.test에 테스트 계정 필요, 빌드 후 :3100에서 실행)
 ```
 
 ## 프로젝트 구조
@@ -78,36 +87,55 @@ src/
 ├─ app/                # 라우트 (App Router)
 │  ├─ album/[mbid]/     # 앨범 허브
 │  ├─ archive/          # 아카이브
-│  ├─ gallery/, promo/, qa/, updates/   # 게시판 4종
-│  ├─ profile/[id]/, ranking/, search/
-│  └─ api/              # search, likes, follows, ratings, comments
-├─ components/          # album, board, gallery, promo, profile, ranking, ui 등
+│  ├─ gallery/, promo/, qa/, updates/   # 게시판 4종 (목록 + [postId] 상세)
+│  ├─ profile/[id]/, ranking/, search/, notifications/
+│  ├─ api/              # search, likes, follows, ratings, comments
+│  └─ icon.tsx, apple-icon.tsx, opengraph-image.tsx   # 파비콘·OG (#196)
+├─ components/          # album, board, cards, gallery, home, layout, promo, profile, ui 등
 ├─ lib/
 │  ├─ supabase/         # client.ts, server.ts
-│  ├─ likes/, validation/
+│  ├─ likes/, validation/, brand.ts, seo.ts
 └─ hooks/, types/
-supabase/migrations/     # 스키마 변경 이력 (DB 직접 수정 금지, 파일로만)
+e2e/                     # Playwright 시나리오 (anon.spec / user.spec)
+supabase/migrations/     # 스키마 변경 이력 000~021 (DB 직접 수정 금지, 파일로만)
 ```
+
+## 알려진 제한
+
+현재 배포본 기준으로 "있어 보이지만 실제로는 안 되는 것"을 숨기지 않고 적어둡니다. 저장이 안 되는 기능은 거짓 성공 대신 "준비 중"으로 표시합니다.
+
+- 목록 "더 보기"는 비활성 플레이스홀더 — 페이지네이션 없음 (#155)
+- 앨범 등록 요청 모달·갤러리 구독 버튼은 "준비 중" 표시만, 저장 안 됨 (#156 / 구독은 추적 이슈 없음)
+- 알림은 빈 상태 스텁 (#128), 조회수 없음 (#123), 갤러리 이미지 업로드 없음 (#124)
+- `albums.artist_name` ↔ `artists` 매칭 갭 22% — 일부 앨범이 팀 갤러리와 이어지지 않음 (#101)
+- 홈 "최근 발매"는 발매일 컬럼이 없어 DB 등록일 기준 (#130)
+- 다크 단일 테마 — 라이트 토큰 없음
+- dev/prod가 단일 Supabase 프로젝트 — 마이그레이션은 적용 즉시 프로덕션 반영. E2E는 로컬 전용, CI 없음
+- 관리자 지정은 Supabase 콘솔에서 `is_admin` 수동 UPDATE (코드 경로 없음)
 
 ## 로드맵 (v1.1)
 
-아직 스키마나 실기능이 없어 의도적으로 보류한 항목입니다. 착수한 항목은 "진행 중"으로 따로 적습니다.
+아직 스키마나 실기능이 없어 의도적으로 보류한 항목입니다. 열린 이슈(`차기 - v1.1` 마일스톤 15건) 기준.
 
 단순기능
 - 알림 실기능 (발생/목록/읽음 처리) — #128
 - 목록 페이지네이션(키셋 커서) — 현재 "더 보기"는 비활성 플레이스홀더 — #155
-- 도메인 구매
+- 도메인 구매 (이슈 없음)
 
-아카이브 
+아카이브
 - API 수정 -> 장르, 연도별 앨범 구분 — #130
-- 앨범 등록 요청 저장 연결(현재 모달은 저장 없이 접수 표시만) — #156
+- 앨범 등록 요청 저장 연결(현재 모달은 "준비 중" 안내만) — #156
+- albums 중복 행 재발 방지 — mbid 기준 upsert — #117
 
 게시판
 - 갤러리 이미지 업로드(Storage 연동) — #124
-- 게시판 글 C완성 -> RUD 완성(앨범 홍보글 양식 참고)
 - API 데이터 수정(MusicBrainz는 들어오는 유저의 정서와 다소 떨어짐) — 검토 결론: 교체 없이 커버·메타 보강 레이어, 소스는 Apple(iTunes Search API)(#151 · 2026-10-11, Spotify 안 대체) — #151
 - `albums.artist_name` ↔ `artists` 자동 동기화 (현재 매칭 갭 22%) — #101
 - 게시판 안내 기능 살리기(신고, 공지사항, 신설 갤러리 요청, 자주 묻는 질문, 이용 규칙) — #152
+- 갤러리 개념글 좋아요순 정렬 — #126 · 전체 탭 공지 상단 고정 — #175
+- 조회수 카운팅 — #123
 
-그 외 
-- 남은 이슈들 처리, 혹은 필요 없을 시 삭제
+그 외
+- 마감-2 진단 잔여(max-w 토큰화·카드 크기 통일·워드마크·터치 영역·앨범별 OG) — #198
+- 021 트리거와 중복되는 수동 정리 코드 제거 — #176
+- Supabase 보안/성능 어드바이저 WARN 정리 — #134
