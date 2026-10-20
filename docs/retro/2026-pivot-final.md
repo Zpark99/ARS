@@ -36,6 +36,9 @@
 | 열린 이슈 (현재) | **15** | 전부 `차기 - v1.1` |
 | 주간 회고 | 7편 | W35·W36·W37·W39·W40·W41·W42 (W38은 커밋 0건이라 W39에 흡수) |
 
+- **PR 수가 세는 것**: `Zpark99/ARS` 레포의 PR 중 상태 `MERGED`이고 `mergedAt`이 2026-08-04 이후인 것. 기능 브랜치 → develop(53)과 develop → main 승격(7) + 08/23 기능 브랜치 → main 직접 머지(#74) 1건을 전부 포함한 수. 이 문서의 PR #202 자체는 아직 미머지라 제외.
+- **이슈 수가 세는 것**: 생성 72 = `createdAt` 2026-08-04 이후인 이슈(PR 제외). 종료 64 = `closedAt` 2026-08-04 이후인 이슈(피벗 전에 만들어졌다가 이 기간에 닫힌 것 포함). 열림 15 = 현재 `OPEN`.
+
 ```
 gh pr list --state all --limit 500 --json number,baseRefName,state,mergedAt   # mergedAt >= 2026-08-04 로 필터
 gh issue list --state all --limit 500 --json number,state,createdAt,closedAt,milestone
@@ -74,6 +77,9 @@ git log --format='%ad' --date=format:%Y-%m --no-merges --since=2026-08-04 develo
 | 마이그레이션 | 10개 (012 ~ 021), 전체 23개 |
 | 단위 테스트 (Vitest) | 49 (6 파일) |
 | E2E (Playwright) | 17 (2 파일) |
+
+- **커밋 수가 세는 것**: `develop` 브랜치 히스토리에서 `--no-merges --since=2026-08-04`. 승격 merge commit과 squash로 사라진 기능 브랜치 내부 커밋은 포함 안 됨(= develop에 squash로 들어온 PR 1건 ≈ 커밋 1개). `main` 기준으로 세면 승격 merge commit이 더해져 64.
+- **변경 규모가 세는 것**: 피벗 전 마지막 커밋 `019f6ae`(07/29, README v1.0)와 현재 `main` 사이의 `git diff --shortstat` — 중간 과정이 아니라 두 시점의 최종 차이.
 
 ```
 git rev-list --count --no-merges --since=2026-08-04 develop
