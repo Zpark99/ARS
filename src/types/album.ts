@@ -17,6 +17,9 @@ export interface CommentRow {
   created_at: string
 }
 
+// 화면용: 작성자 닉네임(없으면 "사용자 xxxxxxxx" 폴백)을 붙인 코멘트 (#205)
+export type CommentWithAuthor = CommentRow & { author: string }
+
 // popular_albums view
 export interface PopularAlbum {
   id: string

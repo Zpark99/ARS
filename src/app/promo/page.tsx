@@ -7,14 +7,7 @@ import type { Metadata } from "next";
 import { PromoClient } from "@/components/promo/PromoClient";
 import { createClient } from "@/lib/supabase/server";
 import type { PromoCardData } from "@/components/cards/PromoCard";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { formatDate } from "@/lib/date";
 
 type PromoPostRow = {
   id: string;

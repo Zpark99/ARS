@@ -10,17 +10,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { MAX_COMMENT_LENGTH } from "@/lib/validation/comment";
 import { toggleLike, UnauthorizedLikeError } from "@/lib/likes/toggleLike";
-import type { CommentRow } from "@/types/album";
+import type { CommentWithAuthor } from "@/types/album";
+import { formatDate } from "@/lib/date";
 
 type CommentLikeInfo = { count: number; liked: boolean };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 export function ReactionTab({
   albumId,
@@ -29,7 +22,7 @@ export function ReactionTab({
   commentLikes,
 }: {
   albumId: string;
-  initialComments: CommentRow[];
+  initialComments: CommentWithAuthor[];
   currentUserId: string | null;
   commentLikes: Record<string, CommentLikeInfo>;
 }) {
@@ -177,7 +170,7 @@ export function ReactionTab({
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-center gap-2">
                       <span className="text-caption font-semibold text-text">
-                        {isOwn ? "나" : `사용자 ${comment.user_id.slice(0, 8)}`}
+                        {isOwn ? "나" : comment.author}
                       </span>
                       {isOwn && (
                         <span className="rounded-full bg-surface-raised px-1.5 py-0.5 text-caption leading-none text-text-muted">

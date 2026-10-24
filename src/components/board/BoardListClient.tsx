@@ -11,14 +11,8 @@ import { BoardPostRow, type BoardPostRowData } from "./BoardPostRow";
 import BoardPostForm from "./BoardPostForm";
 import { isValidBoardTitle, isValidBoardContent, type BoardType } from "@/lib/validation/board";
 import { createClient } from "@/lib/supabase/client";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { fetchNicknameMap, authorName } from "@/lib/profiles";
+import { formatDate } from "@/lib/date";
 
 export function BoardListClient({
   boardType,
@@ -63,11 +57,12 @@ export function BoardListClient({
       setSubmitError(error?.message ?? "등록에 실패했어요. 다시 시도해주세요.");
       return;
     }
+    const names = await fetchNicknameMap(supabase, [data.user_id]);
     setPosts((prev) => [
       {
         id: data.id,
         title: data.title,
-        author: `사용자 ${data.user_id.slice(0, 8)}`,
+        author: authorName(names, data.user_id),
         likeCount: data.like_count,
         commentCount: 0,
         time: formatDate(data.created_at),

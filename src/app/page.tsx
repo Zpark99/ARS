@@ -12,14 +12,8 @@ import type { GalleryRowData } from "@/components/cards/GalleryRow";
 import type { PromoCardData } from "@/components/cards/PromoCard";
 import type { AlbumCarouselItem } from "@/components/home/AlbumCarousel";
 import { createClient } from "@/lib/supabase/server";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { fetchNicknameMap, authorName } from "@/lib/profiles";
+import { formatDate } from "@/lib/date";
 
 type AlbumBase = {
   id: string;
@@ -174,11 +168,12 @@ async function getGalleryHotPosts(
     .order("created_at", { ascending: false })
     .limit(5);
   if (error) console.error("home gallery hot posts fetch failed:", error);
+  const names = await fetchNicknameMap(supabase, (data ?? []).map((p) => p.user_id));
 
   return (data ?? []).map((p) => ({
     id: p.id,
     title: p.title,
-    author: `사용자 ${p.user_id.slice(0, 8)}`,
+    author: authorName(names, p.user_id),
     likeCount: p.like_count,
     time: formatDate(p.created_at),
     flag: p.post_flag,

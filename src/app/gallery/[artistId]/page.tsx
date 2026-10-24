@@ -8,15 +8,9 @@ import { notFound } from "next/navigation";
 import { TeamGalleryClient } from "@/components/gallery/TeamGalleryClient";
 import type { GalleryRowData, GalleryPostFlag } from "@/components/cards/GalleryRow";
 import { createClient } from "@/lib/supabase/server";
+import { fetchNicknameMap, authorName } from "@/lib/profiles";
 import { isValidUUID } from "@/lib/validation/like";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { formatDate } from "@/lib/date";
 
 type GalleryPostRow = {
   id: string;
@@ -69,11 +63,12 @@ export default async function TeamGalleryPage({
     console.error("team gallery posts fetch failed:", error);
   }
 
-  // 반응 탭(ReactionTab)과 동일한 패턴: 닉네임 조인 없이 user_id 앞 8자리만 표시
-  const posts: GalleryRowData[] = ((postRows ?? []) as GalleryPostRow[]).map((p) => ({
+  const rows = (postRows ?? []) as GalleryPostRow[];
+  const names = await fetchNicknameMap(supabase, rows.map((p) => p.user_id));
+  const posts: GalleryRowData[] = rows.map((p) => ({
     id: p.id,
     title: p.title,
-    author: `사용자 ${p.user_id.slice(0, 8)}`,
+    author: authorName(names, p.user_id),
     likeCount: p.like_count,
     time: formatDate(p.created_at),
     flag: p.post_flag,
