@@ -3,18 +3,12 @@ import { albumMetadata } from '@/lib/seo'
 import { notFound } from 'next/navigation'
 import { AlbumHubClient } from '@/components/album/AlbumHubClient'
 import { createClient } from '@/lib/supabase/server'
+import { fetchNicknameMap, authorName } from '@/lib/profiles'
 import { isValidUUID } from '@/lib/validation/like'
-import type { AlbumRow, CommentRow } from '@/types/album'
+import type { AlbumRow, CommentRow, CommentWithAuthor } from '@/types/album'
 import type { PromoCardData } from '@/components/cards/PromoCard'
 import type { GalleryRowData, GalleryPostFlag } from '@/components/cards/GalleryRow'
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
+import { formatDate } from '@/lib/date'
 
 const MB_BASE = 'https://musicbrainz.org/ws/2'
 const CAA_BASE = 'https://coverartarchive.org/release'
@@ -233,16 +227,21 @@ export default async function AlbumPage({
       console.error('gallery posts fetch failed:', galleryErr)
     }
 
-    // 반응 탭(ReactionTab)과 동일한 패턴: 닉네임 조인 없이 user_id 앞 8자리만 표시
-    galleryPosts = ((galleryRows ?? []) as GalleryPostRow[]).map((g) => ({
+    const rows = (galleryRows ?? []) as GalleryPostRow[]
+    const names = await fetchNicknameMap(supabase, rows.map((g) => g.user_id))
+    galleryPosts = rows.map((g) => ({
       id: g.id,
       title: g.title,
-      author: `사용자 ${g.user_id.slice(0, 8)}`,
+      author: authorName(names, g.user_id),
       likeCount: g.like_count,
       time: formatDate(g.created_at),
       flag: g.post_flag,
     }))
   }
+
+  const commentRows = (comments ?? []) as CommentRow[]
+  const commentNames = await fetchNicknameMap(supabase, commentRows.map((c) => c.user_id))
+  const commentsWithAuthor: CommentWithAuthor[] = commentRows.map((c) => ({ ...c, author: authorName(commentNames, c.user_id) }))
 
   return (
     <AlbumHubClient
@@ -257,7 +256,7 @@ export default async function AlbumPage({
       ratingAvg={ratingAvg}
       ratingCount={ratingCount}
       myScore={myScore}
-      comments={(comments ?? []) as CommentRow[]}
+      comments={commentsWithAuthor}
       commentLikes={commentLikes}
       promos={promos}
       galleryPosts={galleryPosts}

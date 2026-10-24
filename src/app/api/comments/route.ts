@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isValidComment, isValidCommentTargetType, MAX_COMMENT_LENGTH } from '@/lib/validation/comment'
 import { isValidUUID } from '@/lib/validation/like'
-import type { CommentRow } from '@/types/album'
+import type { CommentRow, CommentWithAuthor } from '@/types/album'
+import { fetchNicknameMap, authorName } from '@/lib/profiles'
 
 // GET /api/comments?targetType=album&targetId=<uuid>
 // 최신순 코멘트 목록 반환
@@ -25,7 +26,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: '코멘트 조회에 실패했습니다' }, { status: 500 })
   }
 
-  return NextResponse.json({ comments: (data ?? []) as CommentRow[] })
+  const rows = (data ?? []) as CommentRow[]
+  const names = await fetchNicknameMap(supabase, rows.map((c) => c.user_id))
+  const comments: CommentWithAuthor[] = rows.map((c) => ({ ...c, author: authorName(names, c.user_id) }))
+  return NextResponse.json({ comments })
 }
 
 // POST /api/comments

@@ -10,7 +10,7 @@ import { InfoTab } from "./InfoTab";
 import { ReactionTab } from "./ReactionTab";
 import { PromoTab } from "./PromoTab";
 import { GalleryTab } from "./GalleryTab";
-import type { CommentRow } from "@/types/album";
+import type { CommentWithAuthor } from "@/types/album";
 import type { PromoCardData } from "@/components/cards/PromoCard";
 import type { GalleryRowData } from "@/components/cards/GalleryRow";
 
@@ -43,7 +43,7 @@ export function AlbumHubClient({
   ratingAvg: number | null;
   ratingCount: number;
   myScore: number | null;
-  comments: CommentRow[];
+  comments: CommentWithAuthor[];
   commentLikes: Record<string, { count: number; liked: boolean }>;
   promos: PromoCardData[];
   galleryPosts: GalleryRowData[];
