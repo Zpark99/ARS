@@ -8,14 +8,7 @@ import { isValidUUID } from '@/lib/validation/like'
 import type { AlbumRow, CommentRow, CommentWithAuthor } from '@/types/album'
 import type { PromoCardData } from '@/components/cards/PromoCard'
 import type { GalleryRowData, GalleryPostFlag } from '@/components/cards/GalleryRow'
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
+import { formatDate } from '@/lib/date'
 
 const MB_BASE = 'https://musicbrainz.org/ws/2'
 const CAA_BASE = 'https://coverartarchive.org/release'

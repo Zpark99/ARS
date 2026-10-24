@@ -17,6 +17,7 @@ import BoardCommentSection from "@/components/board/BoardCommentSection";
 import BoardPostLikeButton from "@/components/board/BoardPostLikeButton";
 import { OwnerPostActions } from "@/components/board/OwnerPostActions";
 import type { GalleryPostFlag } from "@/components/cards/GalleryRow";
+import { formatDate } from "@/lib/date";
 
 const CATEGORY_LABEL: Record<GalleryPostFlag, string> = {
   notice: "공지",
@@ -32,14 +33,6 @@ type GalleryPostRow = {
   created_at: string;
   post_flag: GalleryPostFlag;
 };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 // <title> "{글 제목}" (#196)
 export async function generateMetadata({ params }: { params: Promise<{ artistId: string; postId: string }> }): Promise<Metadata> {

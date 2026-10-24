@@ -9,16 +9,9 @@ import { GalleryRow, type GalleryRowData } from "@/components/cards/GalleryRow";
 import { GalleryCard, type GalleryCardData } from "@/components/cards/GalleryCard";
 import { createClient } from "@/lib/supabase/server";
 import { fetchNicknameMap, authorName } from "@/lib/profiles";
+import { formatDate } from "@/lib/date";
 
 const INFO_LINKS = ["게시물 신고", "공지사항", "신설 갤러리 요청", "이용 규칙", "자주 묻는 질문"];
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 export const metadata: Metadata = { title: "갤러리" };
 

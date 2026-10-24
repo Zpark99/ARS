@@ -17,14 +17,7 @@ import BoardPostLikeButton from "@/components/board/BoardPostLikeButton";
 import BoardCommentSection from "@/components/board/BoardCommentSection";
 import { OwnerPostActions } from "@/components/board/OwnerPostActions";
 import { SharePostButton } from "@/components/gallery/SharePostButton";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { formatDate } from "@/lib/date";
 
 type BoardPostRow = {
   id: string;

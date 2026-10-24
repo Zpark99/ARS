@@ -7,14 +7,7 @@ import { BoardListClient } from "@/components/board/BoardListClient";
 import { createClient } from "@/lib/supabase/server";
 import { fetchNicknameMap, authorName } from "@/lib/profiles";
 import type { BoardPostRowData } from "@/components/board/BoardPostRow";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { formatDate } from "@/lib/date";
 
 type QaPostRow = {
   id: string;

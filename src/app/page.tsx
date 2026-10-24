@@ -13,14 +13,7 @@ import type { PromoCardData } from "@/components/cards/PromoCard";
 import type { AlbumCarouselItem } from "@/components/home/AlbumCarousel";
 import { createClient } from "@/lib/supabase/server";
 import { fetchNicknameMap, authorName } from "@/lib/profiles";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { formatDate } from "@/lib/date";
 
 type AlbumBase = {
   id: string;

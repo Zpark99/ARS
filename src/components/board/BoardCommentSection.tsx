@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { MAX_COMMENT_LENGTH } from '@/lib/validation/comment'
 import type { CommentWithAuthor, CommentTargetType } from '@/types/album'
+import { formatDate } from '@/lib/date'
 
 type CommentLikeInfo = { count: number; liked: boolean }
 
@@ -12,14 +13,6 @@ interface BoardCommentSectionProps {
   postId: string
   currentUserId: string | null
   targetType?: CommentTargetType
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
 }
 
 export default function BoardCommentSection({

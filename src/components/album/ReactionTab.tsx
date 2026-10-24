@@ -11,16 +11,9 @@ import { Button } from "@/components/ui/Button";
 import { MAX_COMMENT_LENGTH } from "@/lib/validation/comment";
 import { toggleLike, UnauthorizedLikeError } from "@/lib/likes/toggleLike";
 import type { CommentWithAuthor } from "@/types/album";
+import { formatDate } from "@/lib/date";
 
 type CommentLikeInfo = { count: number; liked: boolean };
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 export function ReactionTab({
   albumId,

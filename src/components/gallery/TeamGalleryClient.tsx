@@ -13,6 +13,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { fetchNicknameMap, authorName } from "@/lib/profiles";
+import { formatDate } from "@/lib/date";
 import { Input } from "@/components/ui/Input";
 import { CategoryTab } from "@/components/ui/CategoryTab";
 import { Button } from "@/components/ui/Button";
@@ -111,11 +112,7 @@ export function TeamGalleryClient({
         title: data.title,
         author: authorName(names, data.user_id),
         likeCount: 0,
-        time: new Date(data.created_at).toLocaleDateString("ko-KR", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }),
+        time: formatDate(data.created_at),
         flag: data.post_flag,
       },
       ...prev,

@@ -12,14 +12,7 @@ import BoardPostForm from "./BoardPostForm";
 import { isValidBoardTitle, isValidBoardContent, type BoardType } from "@/lib/validation/board";
 import { createClient } from "@/lib/supabase/client";
 import { fetchNicknameMap, authorName } from "@/lib/profiles";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { formatDate } from "@/lib/date";
 
 export function BoardListClient({
   boardType,

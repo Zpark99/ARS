@@ -10,14 +10,7 @@ import type { GalleryRowData, GalleryPostFlag } from "@/components/cards/Gallery
 import { createClient } from "@/lib/supabase/server";
 import { fetchNicknameMap, authorName } from "@/lib/profiles";
 import { isValidUUID } from "@/lib/validation/like";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { formatDate } from "@/lib/date";
 
 type GalleryPostRow = {
   id: string;

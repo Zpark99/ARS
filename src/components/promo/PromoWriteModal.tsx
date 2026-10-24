@@ -9,14 +9,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import BoardPostForm, { type PromoSelection } from "@/components/board/BoardPostForm";
 import type { PromoCardData } from "@/components/cards/PromoCard";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+import { formatDate } from "@/lib/date";
 
 type InsertedPromoRow = {
   id: string;

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { formatDate } from '@/lib/date'
 
 export interface MyGalleryPost {
   id: string
@@ -14,12 +15,6 @@ export interface MyGalleryPost {
 interface Props {
   posts: MyGalleryPost[]
   title?: string
-}
-
-function formatDate(iso: string) {
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`
 }
 
 export default function MyGalleryPostsSection({ posts, title = '내 갤러리 글' }: Props) {
@@ -55,7 +50,7 @@ export default function MyGalleryPostsSection({ posts, title = '내 갤러리 �
               const body = (
                 <>
                   <p className="text-xs text-text-muted mb-0.5">
-                    {p.artist_name} 갤러리 · {formatDate(p.created_at)}
+                    {p.artist_name} 갤러리 · {formatDate(p.created_at, 'dot')}
                   </p>
                   <p className="text-sm font-medium text-text truncate">{p.title}</p>
                 </>
