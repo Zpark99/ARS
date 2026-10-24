@@ -10,6 +10,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { fetchNicknameMap, authorName } from "@/lib/profiles";
 import { isValidUUID } from "@/lib/validation/like";
 import type { BoardType } from "@/lib/validation/board";
 import BoardPostLikeButton from "@/components/board/BoardPostLikeButton";
@@ -73,6 +74,7 @@ export async function BoardPostDetail({
 
   const teamName = post.artists?.name ?? post.artist_name_text ?? null;
   const currentUserId = authResult.data.user?.id ?? null;
+  const author = authorName(await fetchNicknameMap(supabase, [post.user_id]), post.user_id);
 
   return (
     <div className="mx-auto flex max-w-[720px] flex-col gap-4 px-4 py-6 md:px-6">
@@ -96,7 +98,7 @@ export async function BoardPostDetail({
           )}
           <h1 className="text-subtitle font-semibold text-text">{post.title}</h1>
           <div className="mt-1.5 flex items-center gap-2 text-caption text-text-muted">
-            <span>사용자 {post.user_id.slice(0, 8)}</span>
+            <span>{author}</span>
             <span>{formatDate(post.created_at)}</span>
           </div>
           {post.albums && (

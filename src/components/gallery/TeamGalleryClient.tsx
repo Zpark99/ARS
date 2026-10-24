@@ -12,6 +12,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { fetchNicknameMap, authorName } from "@/lib/profiles";
 import { Input } from "@/components/ui/Input";
 import { CategoryTab } from "@/components/ui/CategoryTab";
 import { Button } from "@/components/ui/Button";
@@ -103,11 +104,12 @@ export function TeamGalleryClient({
       setSubmitError(error?.message ?? "등록에 실패했어요. 다시 시도해주세요.");
       return;
     }
+    const names = await fetchNicknameMap(supabase, [data.user_id]);
     setPosts((prev) => [
       {
         id: data.id,
         title: data.title,
-        author: `사용자 ${data.user_id.slice(0, 8)}`,
+        author: authorName(names, data.user_id),
         likeCount: 0,
         time: new Date(data.created_at).toLocaleDateString("ko-KR", {
           year: "numeric",

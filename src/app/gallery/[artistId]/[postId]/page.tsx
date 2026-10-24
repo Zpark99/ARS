@@ -1,6 +1,5 @@
 // app/gallery/[artistId]/[postId]/page.tsx
 // 갤러리 글 상세 (#118 신설 → #120 브레드크럼/공유 보강 → #147 댓글 추가 → #150 좋아요 추가).
-// 반응 탭(ReactionTab)과 동일한 패턴: 닉네임 조인 없이 user_id 앞 8자리만 표시.
 // 댓글은 QA와 동일한 BoardCommentSection 재사용, target_type='gallery_post'(#147).
 // 좋아요도 QA와 동일한 BoardPostLikeButton 재사용, target_type='gallery_post'(#150).
 // 조회수·이미지는 컬럼 자체가 없어 제외.
@@ -11,6 +10,7 @@ import { galleryPostMetadata } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { fetchNicknameMap, authorName } from "@/lib/profiles";
 import { isValidUUID } from "@/lib/validation/like";
 import { SharePostButton } from "@/components/gallery/SharePostButton";
 import BoardCommentSection from "@/components/board/BoardCommentSection";
@@ -82,6 +82,7 @@ export default async function GalleryPostPage({
   const post = postResult.data as unknown as GalleryPostRow;
   const artistName = artistResult.data.name;
   const currentUserId = authResult.data.user?.id ?? null;
+  const author = authorName(await fetchNicknameMap(supabase, [post.user_id]), post.user_id);
 
   return (
     <div className="mx-auto flex max-w-[720px] flex-col gap-4 px-4 py-6 md:px-6">
@@ -107,7 +108,7 @@ export default async function GalleryPostPage({
         >
           <h1 className="text-subtitle font-semibold text-text">{post.title}</h1>
           <div className="mt-1.5 flex items-center gap-2 text-caption text-text-muted">
-            <span>사용자 {post.user_id.slice(0, 8)}</span>
+            <span>{author}</span>
             <span>{formatDate(post.created_at)}</span>
           </div>
           <p className="mt-4 whitespace-pre-wrap break-words text-body leading-relaxed text-text">

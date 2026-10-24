@@ -8,6 +8,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { GalleryRow, type GalleryRowData } from "@/components/cards/GalleryRow";
 import { GalleryCard, type GalleryCardData } from "@/components/cards/GalleryCard";
 import { createClient } from "@/lib/supabase/server";
+import { fetchNicknameMap, authorName } from "@/lib/profiles";
 
 const INFO_LINKS = ["게시물 신고", "공지사항", "신설 갤러리 요청", "이용 규칙", "자주 묻는 질문"];
 
@@ -41,10 +42,11 @@ export default async function GalleryHomePage() {
   if (conceptResult.error) console.error("gallery concept posts fetch failed:", conceptResult.error);
   if (artistsResult.error) console.error("gallery artists fetch failed:", artistsResult.error);
 
+  const names = await fetchNicknameMap(supabase, (conceptResult.data ?? []).map((p) => p.user_id));
   const conceptPosts: GalleryRowData[] = (conceptResult.data ?? []).map((p) => ({
     id: p.id,
     title: p.title,
-    author: `사용자 ${p.user_id.slice(0, 8)}`,
+    author: authorName(names, p.user_id),
     likeCount: p.like_count,
     time: formatDate(p.created_at),
     flag: "concept",

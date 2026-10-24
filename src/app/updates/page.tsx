@@ -6,6 +6,7 @@
 import type { Metadata } from "next";
 import { BoardListClient } from "@/components/board/BoardListClient";
 import { createClient } from "@/lib/supabase/server";
+import { fetchNicknameMap, authorName } from "@/lib/profiles";
 import type { BoardPostRowData } from "@/components/board/BoardPostRow";
 
 function formatDate(iso: string): string {
@@ -63,10 +64,11 @@ export default async function UpdatesPage() {
     }
   }
 
+  const names = await fetchNicknameMap(supabase, rows.map((p) => p.user_id));
   const posts: BoardPostRowData[] = rows.map((p) => ({
     id: p.id,
     title: p.title,
-    author: `사용자 ${p.user_id.slice(0, 8)}`,
+    author: authorName(names, p.user_id),
     likeCount: p.like_count,
     commentCount: commentCounts[p.id] ?? 0,
     time: formatDate(p.created_at),

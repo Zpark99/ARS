@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { MAX_COMMENT_LENGTH } from '@/lib/validation/comment'
-import type { CommentRow, CommentTargetType } from '@/types/album'
+import type { CommentWithAuthor, CommentTargetType } from '@/types/album'
 
 type CommentLikeInfo = { count: number; liked: boolean }
 
@@ -28,7 +28,7 @@ export default function BoardCommentSection({
   targetType = 'post',
 }: BoardCommentSectionProps) {
   const router = useRouter()
-  const [comments, setComments] = useState<CommentRow[]>([])
+  const [comments, setComments] = useState<CommentWithAuthor[]>([])
   const [likesState, setLikesState] = useState<Record<string, CommentLikeInfo>>({})
   const [loaded, setLoaded] = useState(false)
   const [content, setContent] = useState('')
@@ -47,7 +47,7 @@ export default function BoardCommentSection({
         if (!cancelled) setLoaded(true)
         return
       }
-      const json: { comments: CommentRow[] } = await res.json()
+      const json: { comments: CommentWithAuthor[] } = await res.json()
       const ids = json.comments.map((c) => c.id)
 
       const next: Record<string, CommentLikeInfo> = {}
@@ -231,7 +231,7 @@ export default function BoardCommentSection({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-semibold text-text-muted">
-                        {isOwn ? '나' : `사용자 ${comment.user_id.slice(0, 8)}`}
+                        {isOwn ? '나' : comment.author}
                       </span>
                       {isOwn && (
                         <span className="text-xs bg-surface-raised text-text-muted px-1.5 py-0.5 rounded-full leading-none">
