@@ -138,3 +138,8 @@ npx vitest run / npx playwright test --list
 ```
 gh issue list --state open --limit 100 --json number,title,milestone
 ```
+
+## 작성 이력
+
+- 2026-10-20 최초 작성(기준 `develop` 55bdf85).
+- 2026-10-25 추가: 10/24 승격 #208 → **v1.0 태그(main `d4d2358`) + GitHub Release 발행(10/25)**, 이후 main 동결. hotfix: #209(README Vitest 수 54, 승격 #211) · #212(제출 전 문서 정리 — 찌꺼기 삭제·docs 목차·archive 배너 현행화).
