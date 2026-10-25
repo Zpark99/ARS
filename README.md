@@ -39,7 +39,7 @@ MusicBrainz에서 앨범을 검색해 아카이브에 모으고, 앨범마다 "�
 | Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS 4, React 19 |
 | Backend/DB | Supabase (PostgreSQL, RLS, Auth) |
 | 외부 API | MusicBrainz, Cover Art Archive |
-| 테스트 | Vitest(단위 49개), Playwright(E2E 17개 — 로컬 `next build` + `next start` 대상) |
+| 테스트 | Vitest(단위 54개), Playwright(E2E 17개 — 로컬 `next build` + `next start` 대상) |
 | 배포 | Vercel |
 
 ## 한번 막힌 지점
