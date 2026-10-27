@@ -107,7 +107,7 @@ sm 6 · md 10 · lg 14 · full 9999
 | HubTabs | 앨범 허브 | promo/gallery/reactions/info |
 | TabBar | 전역(모바일) | — |
 
-### 3.4 🆕 추가 예정 (홈 재정비·갤러리 전환)
+### 3.4 홈 재정비·갤러리 전환 시 추가된 컴포넌트 (기획 시점엔 "추가 예정", 이후 전부 구현)
 
 > SectionHeader·CarouselArrow·GlobalHeader/TabBar/GlobalFooter·SubscribeButton·GalleryCard·Input의 최신 작업 내역·용도는 [06 Screen-Definitions §8](./06_Screen-Definitions.md#8-컴포넌트-추가변경)로 통합됨 (중복 제거). GlobalHeader/TabBar/GlobalFooter의 구현 디테일은 [06 §4](./06_Screen-Definitions.md#4-공용-레이아웃-전-화면-공통) 참고.
 
