@@ -48,3 +48,6 @@ next-env.d.ts
 /e2e/.auth/
 /test-results/
 /playwright-report/
+
+# 로컬 실행 로그 (#212 — dev.log가 초기 커밋부터 추적돼 있었음)
+*.log

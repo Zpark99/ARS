@@ -1,3 +1,5 @@
+> ⚠️ **이 문서는 피벗 전(v1, 2026-07까지) README 원본입니다.** 평점·코멘트 중심 앨범 리뷰 서비스 시절 내용으로, 현재 서비스(음악 커뮤니티)와 다릅니다. 현재 README는 [루트 `README.md`](../../README.md), 피벗 이유는 [`00_Pivot-Decision-Log.md`](../00_Pivot-Decision-Log.md).
+
 # ARS (Album Review Service)
 
 좋아하는 앨범을 검색하고, 평점과 코멘트를 남기고, 다른 사람과 취향을 공유하는 앨범 리뷰 서비스입니다.

@@ -1,11 +1,11 @@
 > ⚠️ **이 문서는 2026/08 피벗 시점의 기획본입니다. 실제 구현과 다릅니다.**
 > 주요 차이: Spotify → 실제 MusicBrainz + Cover Art Archive / posts 통합 테이블 → 실제
 > board_posts(promo·qa·update) + gallery_posts 분리 / gallery_subscriptions·notifications
-> 실기능·monthly_ranking VIEW·is_admin(role) 등은 미구현(v1.1).
+> 실기능·monthly_ranking VIEW 등은 미구현(v1.1). is_admin(role)은 019/020으로 구현됨(#125, 2026-10-09).
 >
 > **현재 실제 상태 참조:**
 > - 스키마: [`../03_ERD.md`](../03_ERD.md)
-> - 배포 상태·회귀: `08_Deployment-Checklist.md` — 레포에는 아직 없음, 이슈 [#73](https://github.com/Zpark99/ARS/issues/73)로 진행 예정
+> - 배포 상태·회귀: [`../08_Deployment-Checklist.md`](../08_Deployment-Checklist.md) (v0.5, 2026-10-18)
 > - 기능 개요: 루트 [`README.md`](../../README.md)
 > - API·아키텍처 실제: 코드(`app/api/`, `app/`)가 정본
 >
