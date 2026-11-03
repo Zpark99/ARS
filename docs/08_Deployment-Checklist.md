@@ -22,6 +22,7 @@
 | v0.3 | 10/09 | §2에 관리자 전용 RLS(019/020 — updates 쓰기·notice 지정 제한 + UPDATE WITH CHECK) 점검 항목 추가, "role 체계 v1.1" → **일부 구현(is_admin 도입)**으로 정정, §5에 관리자 권한 스모크 추가 (#125, PR #164 머지 전) |
 | v0.4 | 10/09 | #125 반영 완료로 상태 문구 정정(#167 승격·이슈 종료), §5 관리자 스모크를 갤러리 탭별 글쓰기 규칙으로 갱신(#172) |
 | v0.5 | 10/18 | §2에 021 트리거 점검 항목(#148/#43 해소), §5에 글 수정·삭제 스모크(#64/#178, #182 반영) + 공지 탭 빈 상태 CTA 없음(#183), #151 보강 소스 Apple(iTunes)로 정정, §7 v1.1 목록에서 #148·#43 제거 (#187) |
+| v0.6 | 11/03 | §2에 RLS `WITH CHECK` 전수 점검 1줄(11/03 `pg_policies` 12건 누락 0건), §5에 작성자 닉네임·KST 날짜 표기 스모크 추가(#205/#207, #208 승격), §6에 v1.0 태그 이후 main 동결(hotfix만)·승격 merge commit 규칙(#168) + 승격 전 테스트 기준(Vitest 54 · E2E 17) 명시, §7 v1.1 목록에 #206(user_id FK + embed) 추가 (#217) |
 
 ## 1. 환경변수 🛡️
 
@@ -50,6 +51,7 @@
 - [ ] comments/likes `target_type` CHECK에 `gallery_post` 반영 + `gallery_posts.like_count` 컬럼·`sync_like_count()` 갤러리 분기 확인 (017/018, #147/#150)
 - [ ] **관리자 전용 쓰기 정책 확인** (019/020, #125): `profiles.is_admin` 컬럼 · `public.is_admin()`(SECURITY DEFINER·STABLE·`search_path=public`, `anon`엔 EXECUTE 없음) · `board_posts` INSERT/UPDATE에 `board_type='updates'` 제한 · `gallery_posts` INSERT/UPDATE에 `post_flag='notice'` 제한
 - [ ] **UPDATE 정책에 `WITH CHECK` 존재 확인** — `USING`만 있으면 본인 행의 `board_type`/`post_flag` 바꿔치기가 뚫림(020에서 실제로 막은 구멍). 권한 변경 후엔 차단 확인만이 아니라 **일반 유저 회귀**(과차단 여부)까지
+- [ ] RLS 전수 점검: `pg_policies`에서 `cmd IN ('INSERT','UPDATE')` 조회 → `with_check` 누락 0건 확인 (11/03 기준 12건 전부 있음, `albums_insert_authenticated`만 `true` = 공용 카탈로그라 의도된 개방)
 - [ ] **021 트리거 7개 확인** (#148/#43, 2026-10-13): `pg_trigger`에 `trg_cleanup_gallery_post_related`(gallery_posts AFTER DELETE) · `trg_board_posts_board_type_immutable` · `trg_gallery_posts_artist_immutable` · `trg_gallery_posts_flag_admin_only`(BEFORE UPDATE OF) · `trg_cleanup_comment_likes`(comments AFTER DELETE) + 기존 `trg_cleanup_board_post_related`·`trg_sync_like_count`. 고아 좋아요(`likes.target_type='comment'` 중 대상 댓글 없음) 0건
 - [ ] 마이그레이션 파일 = DB 상태 일치 (유령 마이그레이션 없음, 파일 먼저 원칙)
 
@@ -85,6 +87,8 @@
 - [ ] 글 읽기: 갤러리·홍보·QA·업데이트 목록 → 글 클릭 → 상세 본문 도달 · href="#" 잔존 0 (#121)
 - [ ] 글 반응: 갤러리·홍보·QA 상세에서 댓글 작성/본인 삭제 · 글/댓글 좋아요 토글 → 카운트 반영 · 공유 버튼 노출 (#149)
 - [ ] 글 수정·삭제 (#64/#178, 021): 본인 글 상세에 "내 글 관리"(수정·삭제) → 제목 수정 즉시 반영 · 삭제 확인창 → 목록으로 이동, 뒤로 가기로 404 안 감 · **갤러리 글에 댓글 단 채 삭제 → 댓글도 사라짐**(021 트리거) · 남의 글엔 버튼 0개 · 홍보 수정 폼에 "팀·앨범은 수정할 수 없어요". 업데이트 게시판은 관리자 계정으로 눈 확인(E2E 미커버), 나머지는 E2E가 자동 확인
+- [ ] 작성자 표기 (#205/#207): 홈 피드·게시판 목록·글 상세·댓글에서 닉네임 노출 · `사용자 XXXXXXXX` 형태 잔존 0건(닉네임 없는 계정만 폴백). 승격 후 curl로 홈 HTML에 닉네임 출현·`사용자 ` 0회 확인(#208에서 "박진재" 26회 · "사용자 958aaced" 0회)
+- [ ] 날짜 표기 (#207): KST 자정 전후(UTC 15시~24시) 생성분이 KST 날짜로 표시 · Vercel(UTC)에서 하루 밀림 없음(#208 승격 후 twelveM 별점 "9월 5일"). 로컬은 TZ가 KST라 재현 불가 → vitest `TZ=UTC` 회귀 테스트가 커버
 - [ ] 푸터 "문의" → `/qa` · "이용약관" 링크 없음 · 프로필 "갤러리 글" → 글 상세 도달 (#111/#180)
 - [ ] 프로필: 마이페이지 → 프로필 흡수 · 팔로우/팔로잉 · isOwn 분기(이메일 본인만)
 - [ ] 알림: 아이콘 클릭 → 404 아닌 빈 상태 스텁 (실기능 v1.1)
@@ -96,7 +100,9 @@
 
 ## 6. 배포 절차
 
-- [ ] develop 안정화 확인
+- [ ] develop 안정화 확인 — 승격 전 `tsc` 0 · `npm run lint` 전체 0 · Vitest **54/54** · E2E **17/17** (v1.0 기준, 10/25)
+- [ ] **v1.0 태그(10/25, `d4d2358`) 이후 main 동결**: 승격은 hotfix만. v1.1 작업은 별도 지시 시에만 진행
+- [ ] 승격은 **merge commit**(`gh pr merge --merge`). squash 금지 — main에 develop이 모르는 커밋이 생겨 다음 승격에서 add/add 충돌(#168 재발 기록). 기능→develop은 squash 그대로
 - [ ] **develop 머지분의 열린 이슈 수동 정리** — develop 머지는 `Closes` 자동 발동 안 됨(기본 브랜치=main일 때만). main 승격 전 미정리 이슈 확인
 - [ ] develop → main 승격 PR (= 프로덕션 배포, 머지 시 `Closes` 자동 발동)
 - [ ] Vercel 빌드 성공 · 환경변수 반영 확인
@@ -107,7 +113,7 @@
 
 - [ ] 콜드스타트 대응: 시드 앨범·본인 홍보글 등록
 - [ ] 에러 로그 모니터링 (첫 24h) — 특히 §4 회귀 지점(더미 식별자 가드 로그, INSERT error)
-- [ ] v1.1 마일스톤 정리: 알림 실기능(#128), 페이지네이션(#155), 앨범 등록 요청 저장(#156), 게시판 안내 기능(#152), 갤러리 이미지 업로드(#124), 개념글 정렬(#126), 매칭 갭(#101), 공지 상단 고정(#175), 수동 정리 중복 제거(#176)
+- [ ] v1.1 마일스톤 정리: 알림 실기능(#128), 페이지네이션(#155), 앨범 등록 요청 저장(#156), 게시판 안내 기능(#152), 갤러리 이미지 업로드(#124), 개념글 정렬(#126), 매칭 갭(#101), 공지 상단 고정(#175), 수동 정리 중복 제거(#176), 작성자 `user_id` → `profiles.id` FK + embed 전환(#206 — 현재는 `fetchNicknameMap` 별도 조회로 우회, DDL이 즉시 프로덕션이라 동결 후)
   - ✅ 공지 권한·role 체계(#125): **완료** — 019/020 적용, UI 프로덕션 반영(#167), 프로덕션 관리자 UI 확인 후 종료(10/09)
   - ✅ 갤러리 삭제 정리 트리거(#148) · `board_type` 불변(#43) · 글 수정·삭제(#64/#178): **완료** — 021 적용(10/13), UI 프로덕션 반영(#182), 10/14 눈 확인 7/7
   - ✅ 데이터 소스 검토(#151): 조사 **완료** — MusicBrainz 유지 + 보강 레이어, ip3-archive 탈락(10/08). 보강 소스는 Spotify → **Apple(iTunes)**로 변경(10/11). 실구현은 v1.1
