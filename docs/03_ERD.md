@@ -34,7 +34,7 @@
 | 테이블 | 역할 |
 |---|---|
 | `profiles` | 공개 프로필 (`auth.users`와 1:1) |
-| `artists` | 아티스트/팀. 갤러리 기능을 흡수한 단일 엔티티 |
+| `artists` | 아티스트/팀. 갤러리 기능을 흡수한 단일 엔티티(갤러리 연동) |
 | `albums` | 앨범 카탈로그 (MusicBrainz `mbid` 기준) |
 | `board_posts` | 게시판 통합 테이블 — `board_type`으로 `qa`/`updates`/`promo` 3종만 분기 (**`gallery`는 여기 없음**) |
 | `gallery_posts` | 갤러리 글. `board_posts`와 완전히 분리된 별도 테이블 |
@@ -46,11 +46,11 @@
 | `popular_albums` (VIEW) | 평점 개수·평균 기준 인기 앨범 |
 | `monthly_artists` (VIEW) | 이달 평점이 달린 아티스트 집계 |
 
-> `galleries` 테이블은 애초에 존재한 적이 없습니다(마이그레이션 012 주석 확인). "폐기"가 아니라 처음부터 `artists`가 갤러리 역할을 겸했습니다.
-
 ---
 
 ## 2. ERD 다이어그램
+
+> 범례: `||` = 정확히 1개, `o{` = 0개 이상, `o|` = 0 또는 1개
 
 ```mermaid
 erDiagram
@@ -160,7 +160,7 @@ erDiagram
 ```
 
 > **폴리모픽 주의**: `comments.target_id` / `likes.target_id`는 실제 FK 제약이 없습니다(대상 테이블이 `album`/`post`/`gallery_post`/`comment`로 갈리기 때문). 위 다이어그램에서도 실선 FK로 그리지 않았습니다 — 애플리케이션 레벨에서만 무결성을 보장합니다.
-> **`albums.artist_name`은 `artists`를 가리키는 FK가 아니라 자유 텍스트**입니다. `board_posts`/`gallery_posts`가 `artists.id`로 팀을 연결하는 것과 다른 경로라, 두 값이 어긋나는 경우가 실측 22%입니다(#101, 9장 로드맵).
+> **`albums.artist_name`은 `artists`를 가리키는 FK가 아니라 자유 텍스트**입니다. `board_posts`/`gallery_posts`가 `artists.id`로 팀을 연결하는 것과 다른 경로라, 두 값이 어긋나는 경우가 실측 22%입니다(#101)
 
 ---
 
@@ -178,9 +178,6 @@ erDiagram
 | created_at | timestamptz | default now() |
 | is_admin | boolean | NOT NULL, default `false` (019) |
 
-> 기획 문서의 `username`(UNIQUE) 컬럼은 **실제로 존재하지 않습니다** — 컬럼명은 `nickname`이고 중복 제약도 없습니다.
-> `is_admin`은 019(2026-10-08)로 **추가됐습니다**(#125). 판정은 `public.is_admin()` — `SECURITY DEFINER` · `STABLE` · `search_path=public` 고정, EXECUTE 권한은 `postgres`/`authenticated`/`service_role`만(`anon`·`PUBLIC` 없음). 등급이 일반/관리자 둘뿐이라 `role text` enum 대신 boolean 1컬럼. 관리자 지정은 **Supabase 콘솔 수동 `UPDATE`**(운영자 1명, 코드 경로 없음 — #153과 같은 방식). 이 컬럼을 쓰는 RLS는 6장 참조.
-> 현재 상태: 019/020 라이브 DB 적용 + UI 게이트 프로덕션 반영(#167, 2026-10-09) → #125 종료. 갤러리 공지는 **공지 탭에서 관리자만 작성**(#172).
 
 ### 3.2 `artists`
 
@@ -193,8 +190,6 @@ erDiagram
 | subscriber_count | int | NOT NULL, default 0 |
 | is_gallery_open | bool | NOT NULL, default true |
 | created_at | timestamptz | default now() |
-
-> 기획 문서의 `spotify_id`/`source`/`is_verified`/`image_url`은 **존재하지 않습니다** — Spotify 연동 자체가 폐기되고 MusicBrainz 기반으로 갔기 때문입니다. RLS도 `SELECT`만 공개 정책이 있고 INSERT/UPDATE 정책이 없어(관리자 보정 기능 없음), 현재는 애플리케이션에서 신규 아티스트 행을 만드는 별도 쓰기 경로가 없는 상태입니다(관련 코드 경로는 이번 조사에서 확인하지 않음 — [확인 필요]).
 
 ### 3.3 `albums`
 
@@ -211,7 +206,7 @@ erDiagram
 > `spotify_id`/`source`/`is_verified`/`artist_id`(FK)/`release_date` 전부 없음. 장르·발매연도 필터가 안 되는 이유(#130)는 애초에 해당 컬럼이 없기 때문입니다.
 
 ### 3.4 `board_posts`
-QA·업데이트·홍보 3종 통합. **갤러리는 여기 없습니다** — `gallery_posts`가 완전히 별도 테이블입니다.
+QA·업데이트·홍보 3종 통합, 갤러리 제외 — `gallery_posts`가 완전히 별도 테이블
 
 | 컬럼 | 타입 | 제약 |
 |---|---|---|
@@ -436,6 +431,7 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | 갤러리 이미지 업로드 | — | Storage 연동 없음 | #124 |
 | 아카이브 장르/발매연도 필터 | — | `albums`에 해당 컬럼 자체 없음 (MusicBrainz 백필 선행 필요) | #130 |
 | `album_requests` | 앨범 등록 요청(검색 0 → 요청 → 관리자 승인) | 테이블 없음, 모달은 더미 제출(저장 안 됨). **관리자 확인 = Supabase 콘솔 수동으로 확정**(2026-09-24, 06 §5와 동일). role 체계는 #125로 도입됐지만(`is_admin`) 요청 승인 화면은 테이블 신설 + insert 연결 후의 과제 | 저장 연결: #156 / 관리자 UI: #125 |
+| Apple Music(Korea) 전환 · 갤러리 아티스트 목록 리뉴얼 | — | 미착수. 앨범 데이터 소스를 Apple Music(Korea) 기준으로 전환, 갤러리 아티스트 목록 리뉴얼 예정 | — |
 | Spotify 연동 전반 | 앨범/아티스트 임포트, `spotify_id`/`source`/`is_verified` | 전면 폐기, MusicBrainz가 **신원 백본**. 검토 결론(#151): 교체 없이 **커버·메타 보강 레이어**만 추가. 보강 소스는 2026-10-08 Spotify → **2026-10-11 Apple(iTunes Search API)로 변경** — 키 불필요, `country=KR`, MusicBrainz `barcode` → `/lookup?upc=` 1:1 매칭(바코드 없으면 이름 검색 폴백). 착수 전 Apple/iTunes 약관의 링크백·표기 조건 확인. 구현은 v1.1 | #151 |
 
 ### 해소 — 삭제 정리 · 컬럼 불변 (2026-10-13, #148/#43)
