@@ -15,7 +15,7 @@
 
 | 문서 | 역할 |
 |---|---|
-| [03_ERD](./03_ERD.md) | **실제 배포 스키마**(v1.0.5) — 테이블·RLS·트리거·기획 대비 델타·v1.1 로드맵. 정본 |
+| [03_ERD](./03_ERD.md) | **실제 배포 스키마**(v1.0.6) — 테이블·RLS·트리거·기획 대비 델타·v1.1 로드맵. 정본 |
 | [05_Design-System](./05_Design-System.md) | 디자인 토큰(Brand→Semantic)·타이포·컴포넌트 목록 (기획) |
 | [06_Screen-Definitions](./06_Screen-Definitions.md) | 화면정의서 — 화면별 구성·상태·컴포넌트 변경 이력 (기획, v0.3) |
 
@@ -23,7 +23,7 @@
 
 | 문서 | 역할 |
 |---|---|
-| [08_Deployment-Checklist](./08_Deployment-Checklist.md) | 배포 전 점검표(v0.5) — 환경변수·RLS·트리거·스모크 항목 |
+| [08_Deployment-Checklist](./08_Deployment-Checklist.md) | 배포 전 점검표(v0.6) — 환경변수·RLS·트리거·스모크 항목 |
 | [루트 CLAUDE.md](../CLAUDE.md) | 브랜치 3단계·이슈→PR→승격 워크플로우·더미 데이터 금지 규칙 (AI 협업 규칙서) |
 
 ## 회고

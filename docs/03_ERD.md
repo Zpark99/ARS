@@ -24,6 +24,7 @@
 | v1.0.3 | 2026-10-09 | role(관리자) 체계 도입분 반영 — `profiles.is_admin` 컬럼, `public.is_admin()` 함수, 019/020 마이그레이션, `board_posts`/`gallery_posts` RLS 정책 4개 교체. 라이브 DB 조회 기준 (#125 — 마이그레이션 적용 완료, UI는 PR #164 머지 전) |
 | v1.0.4 | 2026-10-09 | #125 상태 갱신(UI 게이트 프로덕션 반영 #167, 이슈 종료) + 갤러리 공지 작성 = 공지 탭 관리자 전용(#172, 토글 제거) |
 | v1.0.5 | 2026-10-18 | 021 반영(2026-10-13 적용, #148/#43 해소) — `gallery_posts` 삭제 정리 트리거, `board_type`/`artist_id`/`post_flag` 불변 트리거, 댓글 삭제 시 좋아요 정리. 글 수정·삭제 UI 프로덕션 반영(#64/#178, #182). #151 보강 소스 Spotify → Apple(iTunes) 변경(10/11) (#187) |
+| v1.0.6 | 2026-11-03 | 10/18 이후 코드 변경 반영(**스키마 변경 없음**, 마이그레이션 021이 마지막). 작성자 닉네임 표시를 `fetchNicknameMap`(user_id 모아 `profiles` 별도 1회 조회) 방식으로 전환 — `board_posts`/`gallery_posts`/`comments.user_id`가 `auth.users` FK라 PostgREST embed 불가(PGRST200 확인). FK 추가 + embed 전환은 #206 v1.1로 이월(#205/#207, #208 승격). 날짜 표기 `timeZone: "Asia/Seoul"` 고정(#207). 2026-11-03 `pg_policies` 조회: public 스키마 INSERT·UPDATE 정책 12건 중 `WITH CHECK` 누락 0건(000~020 파일과 일치), `albums_insert_authenticated`만 `true`이나 공용 카탈로그라 의도된 개방 (#217) |
 
 ---
 
@@ -433,6 +434,7 @@ UNIQUE(`user_id`,`album_id`). UPDATE 정책에 `WITH CHECK(auth.uid() = user_id)
 | `album_requests` | 앨범 등록 요청(검색 0 → 요청 → 관리자 승인) | 테이블 없음, 모달은 더미 제출(저장 안 됨). **관리자 확인 = Supabase 콘솔 수동으로 확정**(2026-09-24, 06 §5와 동일). role 체계는 #125로 도입됐지만(`is_admin`) 요청 승인 화면은 테이블 신설 + insert 연결 후의 과제 | 저장 연결: #156 / 관리자 UI: #125 |
 | Apple Music(Korea) 전환 · 갤러리 아티스트 목록 리뉴얼 | — | 미착수. 앨범 데이터 소스를 Apple Music(Korea) 기준으로 전환, 갤러리 아티스트 목록 리뉴얼 예정 | — |
 | Spotify 연동 전반 | 앨범/아티스트 임포트, `spotify_id`/`source`/`is_verified` | 전면 폐기, MusicBrainz가 **신원 백본**. 검토 결론(#151): 교체 없이 **커버·메타 보강 레이어**만 추가. 보강 소스는 2026-10-08 Spotify → **2026-10-11 Apple(iTunes Search API)로 변경** — 키 불필요, `country=KR`, MusicBrainz `barcode` → `/lookup?upc=` 1:1 매칭(바코드 없으면 이름 검색 폴백). 착수 전 Apple/iTunes 약관의 링크백·표기 조건 확인. 구현은 v1.1 | #151 |
+| `user_id` → `profiles.id` FK + embed 전환 | — (기획 문서엔 작성자 표시 방식 언급 없음) | `board_posts`/`gallery_posts`/`comments.user_id`가 `auth.users` FK라 PostgREST embed 불가. 현재는 `fetchNicknameMap`이 id를 모아 `profiles`를 별도 1회 조회(#205/#207). FK를 `profiles.id`로 걸어 embed 1회 조회로 바꾸는 건 DDL이 즉시 프로덕션 반영이라 v1.0 동결 후로 이월 | #206 |
 
 ### 해소 — 삭제 정리 · 컬럼 불변 (2026-10-13, #148/#43)
 
