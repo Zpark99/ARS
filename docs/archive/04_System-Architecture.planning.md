@@ -12,7 +12,7 @@
 > 이 문서는 "피벗 당시 계획"의 기록으로만 보존하며 정정하지 않습니다.
 
 # System Architecture — ARS (피벗)
-> ✅ 확정 · 🔶 설계 판단 · ⚠️ P1 리스크<br>선행: 03 ERD · 후행: 07 API-Spec / 08 Deployment-Checklist
+> ✅ : 확정 · 🔶 : 설계 판단 · ⚠️ : P1 리스크<br>읽어야 할 순서 03 ERD -> 07 API-Spec / 08 Deployment-Checklist 순서로, 나머진 자유
 
 ---
 
@@ -45,8 +45,6 @@
 | DB / Auth | Supabase (PostgreSQL 15 + RLS) | Auth = 구글 OAuth |
 | 외부 API | Spotify Web API | 앨범·가수 메타 임포트 |
 | 호스팅 | Vercel | Route Handler = 서버리스 함수 |
-
-> 법과사전과 달리 **LLM 의존 없음** (AI 판단 기능 부재).
 
 ---
 

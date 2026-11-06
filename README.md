@@ -63,6 +63,12 @@ MusicBrainz에서 앨범을 검색해 아카이브에 모으고, 앨범마다 "�
 
 업데이트 게시판은 "글쓰기 버튼을 숨겼으니 관리자 전용"이라고 적혀 있었지만, 비관리자 JWT로 REST를 직접 호출해 보니 `updates` 글 생성과 본인 `qa` 글의 `board_type` 전환이 그대로 통과했습니다. 원인은 UPDATE 정책에 `USING`만 있어 신규 행 검사까지 `USING`이 겸하고 있던 것. 정책을 `WITH CHECK`가 있는 것으로 **교체**했습니다(같은 cmd의 PERMISSIVE 정책은 OR로 합쳐져, 느슨한 정책을 남긴 채 엄격한 정책을 추가해도 안 막힘 — #125/020). 그런데 `WITH CHECK`는 새 값만 볼 뿐 OLD 행을 못 보기 때문에 "`qa ↔ promo` 전환 금지" 같은 컬럼 불변은 여전히 못 막았고, 이건 `BEFORE UPDATE OF <컬럼>` + `WHEN (OLD IS DISTINCT FROM NEW)` 트리거로 내렸습니다(#43/021). 세 단계 모두 "막힌 것 같다"가 아니라 뚫림을 먼저 재현(트랜잭션 롤백)한 뒤 차단 확인과 일반 유저 회귀까지 보는 순서로 진행했습니다.
 
+## 문서
+
+1. [피벗 회고](docs/retro/2026-pivot-final.md) — 전체 타임라인과 주요 의사결정
+2. [피벗 결정 로그](docs/00_Pivot-Decision-Log.md) — 방향 전환 근거
+3. [ERD](docs/03_ERD.md) — 실제 배포 스키마, RLS·트리거 포함
+
 ## 로컬 실행
 
 ```bash
